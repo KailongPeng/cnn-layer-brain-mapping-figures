@@ -8,7 +8,9 @@ outputs/
 *.nii
 *.nii.gz
 *.npy
+!image_synthesis/assets/16corr_GradOrth.npy
 *.npz
 *.csv
 *.pdf
 *.png
+image_synthesis/assets/tensorflow_inception_graph.pb

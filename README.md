@@ -1,12 +1,18 @@
 # CNN layer brain mapping figures
 
-This repository contains the plotting code for the data panels in the paper
-"Synthesizing images to map neural networks to the human brain." The scripts
-start from derived NIfTI maps or NumPy arrays. They do not preprocess fMRI data
-and they do not assemble panels into manuscript figures.
+This repository contains the image-synthesis and panel-plotting code for the
+paper "Synthesizing images to map neural networks to the human brain." Plotting
+scripts start from derived NIfTI maps or NumPy arrays. They do not preprocess
+fMRI data or assemble panels into manuscript figures.
 
 No subject data, model checkpoints, intermediate searchlight files, rendered
 figures, or cluster job files are included.
+
+## Image synthesis
+
+The TensorFlow 1 program used to synthesize the 16-image stimulus set is in
+[`image_synthesis/`](image_synthesis/). Its README describes the historical
+environment, required model file, archived target matrix, and run settings.
 
 ## Scripts
 
