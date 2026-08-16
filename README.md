@@ -5,8 +5,23 @@ paper "Synthesizing images to map neural networks to the human brain." Plotting
 scripts start from derived NIfTI maps or NumPy arrays. They do not preprocess
 fMRI data or assemble panels into manuscript figures.
 
-No subject data, model checkpoints, intermediate searchlight files, rendered
-figures, or cluster job files are included.
+## Figure-centered layout
+
+The main analysis is being migrated into one directory per main-text figure:
+
+| Directory | Main-text figure |
+| --- | --- |
+| `figures/figure_01_image_synthesis/` | Figure 1 |
+| `figures/figure_02_mapping_schematic/` | Figure 2 |
+| `figures/figure_03_synthesized_localization/` | Figure 3 |
+| `figures/figure_04_nsd_localization/` | Figure 4 |
+| `figures/figure_05_cross_layer_overlap/` | Figure 5 |
+| `figures/figure_06_residual_localization/` | Figure 6 |
+
+Each directory has a public `README.md` describing its panels and method.
+Local provenance is kept in ignored `_private/` and `.lcp_source/` directories;
+these are not required to run the public code. Supplementary figures remain
+outside this migration.
 
 ## Image synthesis
 
@@ -36,8 +51,9 @@ environment, required model file, archived target matrix, and run settings.
 layer. The remaining scripts take compact NPY or NPZ files. Run a script with
 `--help` for its expected fields and command-line arguments.
 
-Figures 1, 2, S1, and S2 are method or task schematics. They are not generated
-from analysis arrays and have no plotting script in this repository.
+Figure 2 is a method schematic and has no standalone numerical generator.
+The legacy `figure_code/` scripts remain available during the migration, while
+the `figures/` tree is the source of truth for the main-figure organization.
 
 ## Environment
 

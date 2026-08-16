@@ -14,3 +14,10 @@ outputs/
 *.pdf
 *.png
 image_synthesis/assets/tensorflow_inception_graph.pb
+
+# Local provenance and migration notes.  These files may contain internal
+# paths, cluster details, or other release-only bookkeeping.
+_private/
+**/_private/
+.lcp_source/
+**/.lcp_source/
