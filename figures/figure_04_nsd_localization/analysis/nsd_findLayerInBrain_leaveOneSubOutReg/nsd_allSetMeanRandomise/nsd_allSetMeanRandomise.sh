@@ -9,7 +9,7 @@
 set -e
 source env_setup_analysis.sh
 
-echo python3 -u fig4/nsd_findLayerInBrain_leaveOneSubOutReg/nsd_allSetMeanRandomise/nsd_allSetMeanRandomise.py "${1}"
-python3 -u fig4/nsd_findLayerInBrain_leaveOneSubOutReg/nsd_allSetMeanRandomise/nsd_allSetMeanRandomise.py "${1}"
+echo python3 -u figures/figure_04_nsd_localization/analysis/nsd_findLayerInBrain_leaveOneSubOutReg/nsd_allSetMeanRandomise/nsd_allSetMeanRandomise.py "${1}"
+python3 -u figures/figure_04_nsd_localization/analysis/nsd_findLayerInBrain_leaveOneSubOutReg/nsd_allSetMeanRandomise/nsd_allSetMeanRandomise.py "${1}"
 
 echo "done"

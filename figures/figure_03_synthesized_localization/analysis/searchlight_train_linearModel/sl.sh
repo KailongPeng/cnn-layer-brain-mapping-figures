@@ -11,7 +11,7 @@ set -e
 source env_setup_brainiak.sh
 
 
-echo python3 -u fig3a/searchlight_train_linearModel/sl.py "${SLURM_ARRAY_TASK_ID}"
-python3 -u fig3a/searchlight_train_linearModel/sl.py "${SLURM_ARRAY_TASK_ID}"
+echo python3 -u figures/figure_03_synthesized_localization/analysis/searchlight_train_linearModel/sl.py "${SLURM_ARRAY_TASK_ID}"
+python3 -u figures/figure_03_synthesized_localization/analysis/searchlight_train_linearModel/sl.py "${SLURM_ARRAY_TASK_ID}"
 
 echo "done"

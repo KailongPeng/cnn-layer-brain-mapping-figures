@@ -11,7 +11,7 @@ set -e
 
 source env_setup_analysis.sh
 
-echo python3 -u fig3a/searchlight_train_linearModel/searchlight_train_linearModel.py
-python3 -u fig3a/searchlight_train_linearModel/searchlight_train_linearModel.py
+echo python3 -u figures/figure_03_synthesized_localization/analysis/searchlight_train_linearModel/searchlight_train_linearModel.py
+python3 -u figures/figure_03_synthesized_localization/analysis/searchlight_train_linearModel/searchlight_train_linearModel.py
 
 echo "done"

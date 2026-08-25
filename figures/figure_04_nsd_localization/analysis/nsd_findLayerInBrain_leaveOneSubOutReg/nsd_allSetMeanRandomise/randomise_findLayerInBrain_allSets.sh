@@ -14,8 +14,8 @@ source env_setup_analysis.sh
 echo "SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID}"
 testMode=${1}
 echo testMode="${testMode}"
-echo "read -r radius method layer negativeCorrelationFlag <<< python3 -u fig4/nsd_findLayerInBrain_leaveOneSubOutReg/nsd_allSetMeanRandomise/loadParameter.py ${SLURM_ARRAY_TASK_ID}"
-read -r radius method layer negativeCorrelationFlag scratchResultFolder <<< "$(python3 -u fig4/nsd_findLayerInBrain_leaveOneSubOutReg/nsd_allSetMeanRandomise/loadParameter.py ${SLURM_ARRAY_TASK_ID})"
+echo "read -r radius method layer negativeCorrelationFlag <<< python3 -u figures/figure_04_nsd_localization/analysis/nsd_findLayerInBrain_leaveOneSubOutReg/nsd_allSetMeanRandomise/loadParameter.py ${SLURM_ARRAY_TASK_ID}"
+read -r radius method layer negativeCorrelationFlag scratchResultFolder <<< "$(python3 -u figures/figure_04_nsd_localization/analysis/nsd_findLayerInBrain_leaveOneSubOutReg/nsd_allSetMeanRandomise/loadParameter.py ${SLURM_ARRAY_TASK_ID})"
 echo "radius=${radius} method=${method} layer=${layer} negativeCorrelationFlag=${negativeCorrelationFlag}"
 echo "scratchResultFolder=${scratchResultFolder}"
 
@@ -40,8 +40,8 @@ savePath="${scratchResultFolder}/nsd/findLayerInBrain_leaveOneSubOutReg/meanAcro
 mkdir -p "${savePath}"
 AllSubs="${savePath}/subs_compiled.nii.gz"
 
-echo python3 -u fig3a/shuffleNorm/loop_fslmerge.py "${AllSubs}" "${fileList}"
-python3 -u fig3a/shuffleNorm/loop_fslmerge.py "${AllSubs}" "${fileList}"
+echo python3 -u figures/figure_04_nsd_localization/analysis/loop_fslmerge.py "${AllSubs}" "${fileList}"
+python3 -u figures/figure_04_nsd_localization/analysis/loop_fslmerge.py "${AllSubs}" "${fileList}"
 
 if [ "$negativeCorrelationFlag" == 0 ]; then
   echo "running positive correlation result"

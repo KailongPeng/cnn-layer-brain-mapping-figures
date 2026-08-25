@@ -1,5 +1,5 @@
 # Usage:
-#   python3 -u rebuttal/BZ/rebuttal_analyses/viz_fig6_overlap_continuous.py
+#   python3 -u rebuttal/analyses/viz_fig6_overlap_continuous.py
 # Run from localize_paper root.
 
 """
@@ -124,7 +124,7 @@ def main():
     # 标题信息交给 tex 图注，页面本身不需要总标题。
 
     out_pdf = os.path.join(PAPER_FIG_DIR, "fig6_overlap_continuous_CDE.pdf")
-    out_png = os.path.join(PAPER_FIG_DIR, "md_png", "fig6_overlap_continuous_CDE.png")
+    out_png = os.path.join(PAPER_FIG_DIR, "..", "previews", "fig6_overlap_continuous_CDE.png")
     os.makedirs(os.path.dirname(out_png), exist_ok=True)
     # 固定页面尺寸而不使用 bbox_inches='tight'。组合脚本据此计算缩放，避免文字变化
     # 让 C-E 的 PDF 宽度漂移，进而再次改变最终视觉字号。

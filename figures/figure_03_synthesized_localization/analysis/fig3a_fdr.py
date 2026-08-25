@@ -5,18 +5,14 @@
 # （repStability_RSA_sl/rad3/__tfce_corrp_tstat1.nii.gz > 0.95，同 visualize.py），逐层各自校正。
 # FDR 的数学与本地蒙特卡洛验证见 lastEmail/21_ 与 docs/adr/0001。
 #
-# 三种跑法：
-#   串行全跑（慢，~10 分钟，行为同以前）：
-#       python3 fig3a/fig3a_fdr.py
-#   并行：先用 job array 每层各渲一张 PNG（12 个任务并发），再装配：
-#       sbatch fig3a/fig3a_fdr_array.sh          # 每个任务 --layer $SLURM_ARRAY_TASK_ID
-#       python3 fig3a/fig3a_fdr.py --assemble    # 12 张 PNG 都在了，读缓存拼图（秒级）
+# 串行运行：
+#   python3 figures/figure_03_synthesized_localization/analysis/fig3a_fdr.py
 #
 # 任何输入文件缺失都会在 display_surface_plot 的 [门禁 FDR] 带路径直接 raise，不静默出错图。
 import sys
 import argparse
 
-sys.path.append("display_surface_plot")
+sys.path.append("figures/figure_03_synthesized_localization/analysis/display_surface_plot")
 from display_surface_plot import plot_surface_saveImageReload_pdf, designCmap
 
 
@@ -44,7 +40,7 @@ def main():
         # 不一致，整体回到老图干净浅背景，又保留纯 inferno 让中等 t 可见（用户选的方案 2）。
         bgDarkness=0.3,
         # 装配后自动同步到仓库 git 跟踪位置，免得手动 cp、免得仓库副本变旧。
-        copyTo="rebuttal/BZ/paper_figures/fig3A_synthesized_FDR_posterior.pdf",
+        copyTo="figures/components/fig3A_synthesized_FDR_posterior.pdf",
     )
 
     if args.assemble:

@@ -11,6 +11,6 @@ set -e
 
 source env_setup_analysis.sh
 
-echo python3 -u Sfig3/Sfig3a/searchlight/convertFeat1toStandSpace.py "${SLURM_ARRAY_TASK_ID}"
-python3 -u Sfig3/Sfig3a/searchlight/convertFeat1toStandSpace.py "${SLURM_ARRAY_TASK_ID}"
+echo python3 -u figures/figure_03_synthesized_localization/analysis/stability/convertFeat1toStandSpace.py "${SLURM_ARRAY_TASK_ID}"
+python3 -u figures/figure_03_synthesized_localization/analysis/stability/convertFeat1toStandSpace.py "${SLURM_ARRAY_TASK_ID}"
 echo "done"

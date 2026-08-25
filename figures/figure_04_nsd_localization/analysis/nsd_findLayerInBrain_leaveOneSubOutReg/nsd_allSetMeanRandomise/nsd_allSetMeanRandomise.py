@@ -32,11 +32,12 @@ print(f"pandas version = {pd.__version__}")
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_04_nsd_localization/analysis"))
 
 from utils import load_obj, save_obj, custom_run, waitForEnd, getjobID_num, check_jobArray, setupPaths, \
     check_jobIDs
@@ -154,14 +155,14 @@ def findLayerInBrain_MeanRandomise(max_whichSets_1=None):
                         jobarrayDict[jobarrayID] = [radius, method, layer, negativeCorrelationFlag]
                         jobarrayID += 1
         print(f"jobarrayDict={jobarrayDict}")
-        np.save(f"fig4/nsd_findLayerInBrain_leaveOneSubOutReg/nsd_allSetMeanRandomise/"
+        np.save(f"figures/figure_04_nsd_localization/analysis/nsd_findLayerInBrain_leaveOneSubOutReg/nsd_allSetMeanRandomise/"
                 f"randomise_findLayerInBrain_allSets_jobArray.npy",
                 jobarrayDict)
         if testMode:
-            cmd = (f"sbatch --requeue --array=1-1 fig4/nsd_findLayerInBrain_leaveOneSubOutReg/"
+            cmd = (f"sbatch --requeue --array=1-1 figures/figure_04_nsd_localization/analysis/nsd_findLayerInBrain_leaveOneSubOutReg/"
                    f"nsd_allSetMeanRandomise/randomise_findLayerInBrain_allSets.sh 1")
         else:
-            cmd = (f"sbatch --requeue --array=1-{len(jobarrayDict)} fig4/nsd_findLayerInBrain_leaveOneSubOutReg/"
+            cmd = (f"sbatch --requeue --array=1-{len(jobarrayDict)} figures/figure_04_nsd_localization/analysis/nsd_findLayerInBrain_leaveOneSubOutReg/"
                    f"nsd_allSetMeanRandomise/randomise_findLayerInBrain_allSets.sh 0")
         sbatch_response = kp_run(cmd)
         jobID = getjobID_num(sbatch_response)

@@ -14,17 +14,14 @@
 # 注：fig4 用 14、fig3 仍用 8，两图色标不再共用——fig3（t 偏低、选择性）与 fig4（t 到 66）
 # 本就该用各自合适的量程，各自 colorbar 标清即可，不为“可比”牺牲 fig4 的“可分”。见 lastEmail #23。
 #
-# 三种跑法（同 fig3a_fdr.py）：
-#   串行全跑（慢）：           python3 fig4/fig4a_fdr.py
-#   并行 render + 装配：
-#       sbatch fig4/fig4a_fdr_array.sh          # 每个任务 --layer $SLURM_ARRAY_TASK_ID
-#       python3 fig4/fig4a_fdr.py --assemble    # 12 张 PNG 都在了，读缓存拼图（秒级）
+# 串行运行：
+#   python3 figures/figure_04_nsd_localization/analysis/fig4a_fdr.py
 #
 # 任何输入文件缺失都会在 display_surface_plot 的 [门禁 FDR] 带路径直接 raise，不静默出错图。
 import sys
 import argparse
 
-sys.path.append("display_surface_plot")
+sys.path.append("figures/figure_04_nsd_localization/analysis/display_surface_plot")
 from display_surface_plot import plot_surface_saveImageReload_pdf, designCmap
 
 
@@ -51,7 +48,7 @@ def main():
         # NSD 无空层，此处主要为与 fig3 观感统一（用户选的方案 2）。
         bgDarkness=0.3,
         # 装配后自动同步到仓库 git 跟踪位置，免得手动 cp、免得仓库副本变旧。
-        copyTo="rebuttal/BZ/paper_figures/fig4A_nsd_FDR_posterior.pdf",
+        copyTo="figures/components/fig4A_nsd_FDR_posterior.pdf",
     )
 
     if args.assemble:

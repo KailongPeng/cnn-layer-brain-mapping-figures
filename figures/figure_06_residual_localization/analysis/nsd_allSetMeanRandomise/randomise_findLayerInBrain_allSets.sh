@@ -13,8 +13,8 @@ source env_setup_analysis.sh
 
 testMode=${1}
 echo testMode="${testMode}"
-echo "read -r radius method layer negativeCorrelationFlag scratchResultFolder <<< python3 -u nsd_residualModel/nsd_allSetMeanRandomise/loadParameter.py ${SLURM_ARRAY_TASK_ID}"
-read -r radius method layer negativeCorrelationFlag scratchResultFolder <<< "$(python3 -u nsd_residualModel/nsd_allSetMeanRandomise/loadParameter.py ${SLURM_ARRAY_TASK_ID})"
+echo "read -r radius method layer negativeCorrelationFlag scratchResultFolder <<< python3 -u figures/figure_06_residual_localization/analysis/nsd_allSetMeanRandomise/loadParameter.py ${SLURM_ARRAY_TASK_ID}"
+read -r radius method layer negativeCorrelationFlag scratchResultFolder <<< "$(python3 -u figures/figure_06_residual_localization/analysis/nsd_allSetMeanRandomise/loadParameter.py ${SLURM_ARRAY_TASK_ID})"
 echo "radius=${radius} method=${method} layer=${layer} negativeCorrelationFlag=${negativeCorrelationFlag}"
 echo "scratchResultFolder=${scratchResultFolder}"
 
@@ -39,8 +39,8 @@ savePath="${scratchResultFolder}/nsd/residualModel/meanAcrossSets/randomise/rad$
 mkdir -p "${savePath}"
 AllSubs="${savePath}/subs_compiled.nii.gz"
 
-echo python3 -u fig3a/shuffleNorm/loop_fslmerge.py "${AllSubs}" "${fileList}"
-python3 -u fig3a/shuffleNorm/loop_fslmerge.py "${AllSubs}" "${fileList}"
+echo python3 -u figures/figure_06_residual_localization/analysis/loop_fslmerge.py "${AllSubs}" "${fileList}"
+python3 -u figures/figure_06_residual_localization/analysis/loop_fslmerge.py "${AllSubs}" "${fileList}"
 
 if [ "$negativeCorrelationFlag" == 0 ]; then
   echo "running positive correlation result"

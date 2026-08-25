@@ -1,25 +1,25 @@
-# Figure 5 — Cross-layer overlap
+# Figure 5: Cross-layer correlation
 
-This directory contains the continuous cross-layer overlap analysis used for
-the main-text Figure 5.
+Figure 5 compares the spatial similarity of the 12 whole-brain layer maps for
+synthesized images and natural images.
 
 ## Panels
 
-- **A:** Cross-layer Pearson correlations between synthesized-image
-  unthresholded effect-size maps.
-- **B:** The same correlation matrix for the 16 NSD image sets.
-- **C:** Bootstrap comparison of the mean off-diagonal correlation.
-- **D:** The corresponding comparison restricted to adjacent layers.
+- A is the 12 by 12 correlation matrix for synthesized-image maps.
+- B is the mean of the 16 per-set NSD correlation matrices.
+- C compares the synthesized off-diagonal mean with a 5,000-sample NSD
+  bootstrap distribution.
+- D repeats the comparison for adjacent layer pairs.
 
-## Relation to the paper
+`analysis/analysis_02_raw_R2_maps.py` loads the continuous layer maps.
+`analysis/analysis_04_continuous_overlap.py` computes the per-dataset and
+per-set matrices inside the representational-stability mask.
+`analysis/analysis_04b_continuous_overlap_bootstrap.py` performs the bootstrap
+comparison. `analysis/viz_fig5_overlap_continuous.py` renders panels A through
+D. The analysis uses complete unthresholded effect maps rather than binary
+significance masks.
 
-The analysis follows the *Overlap analysis* subsection of the Methods in
-`main_tex.md`. It correlates the complete unthresholded whole-brain maps,
-rather than only significant voxels. The NSD null distribution is built from
-per-set correlations and bootstrap resampling across the 16 image sets.
-
-## Inputs and outputs
-
-Inputs are the 12 unthresholded layer maps for synthesized images and the 16
-NSD sets. Outputs are the two correlation matrices, bootstrap distributions,
-and summary statistics used by panels A–D.
+The source retains the original Milgram result paths and imports a local copy
+of `config.py` and `utils.py`. The method decision about averaging per-set NSD
+correlation matrices is recorded in
+`analysis/0001-per-set-vs-grand-mean-cross-layer-overlap.md`.

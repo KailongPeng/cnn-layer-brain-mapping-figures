@@ -24,16 +24,17 @@ from scipy.stats import linregress
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_03_synthesized_localization/analysis"))
 
 from utils import save_nib, setupPaths
 
 
-jobarrayDict = np.load(f"fig3a/searchlight_train_linearModel/sl_jobArray.npy",
+jobarrayDict = np.load(f"figures/figure_03_synthesized_localization/analysis/searchlight_train_linearModel/sl_jobArray.npy",
                        allow_pickle=True)
 
 jobarrayDict = dict(enumerate(jobarrayDict.flatten(), 1))[1]

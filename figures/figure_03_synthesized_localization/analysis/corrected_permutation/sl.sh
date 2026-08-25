@@ -11,7 +11,7 @@
 set -e
 source env_setup_brainiak.sh
 
-echo srun --mpi=pmi2 --kill-on-bad-exit=1 python3 -u rebuttal/BZ/rebuttal_analyses/corrected_permutation/sl.py "${SLURM_ARRAY_TASK_ID}"
-srun --mpi=pmi2 --kill-on-bad-exit=1 python3 -u rebuttal/BZ/rebuttal_analyses/corrected_permutation/sl.py "${SLURM_ARRAY_TASK_ID}"
+echo srun --mpi=pmi2 --kill-on-bad-exit=1 python3 -u figures/figure_03_synthesized_localization/analysis/corrected_permutation/sl.py "${SLURM_ARRAY_TASK_ID}"
+srun --mpi=pmi2 --kill-on-bad-exit=1 python3 -u figures/figure_03_synthesized_localization/analysis/corrected_permutation/sl.py "${SLURM_ARRAY_TASK_ID}"
 
 echo "done"

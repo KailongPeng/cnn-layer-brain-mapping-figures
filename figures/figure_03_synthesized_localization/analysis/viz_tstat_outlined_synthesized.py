@@ -18,7 +18,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(__file__))
 from config import N_LAYERS, REBUTTAL_OUTPUT, SYNTHESIZED_SUBS  # noqa: E402
 
-sys.path.append("display_surface_plot")
+sys.path.append("figures/figure_03_synthesized_localization/analysis/display_surface_plot")
 from display_surface_plot import (  # noqa: E402
     fdr_significant_mask,
     plot_surface_saveImageReload_pdf,
@@ -26,7 +26,7 @@ from display_surface_plot import (  # noqa: E402
 )
 
 NC_VIZ_DIR = os.path.join(REBUTTAL_OUTPUT, "noise_ceiling_viz")
-PAPER_FIG_DIR = os.path.join(os.path.dirname(__file__), "..", "paper_figures")
+PAPER_FIG_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "figures", "components")
 OUT_PDF = os.path.join(PAPER_FIG_DIR, "paper_figure_outlined.pdf")
 STABILITY_MASK_PATH = os.path.join(
     scratchResultFolder, "repStability_RSA_sl", "rad3", "__tfce_corrp_tstat1.nii.gz"
@@ -155,7 +155,7 @@ def save_md_png_preview(pdf_path):
         print("Skipping optional PNG preview: pdftoppm is not installed.")
         return
     stem = os.path.splitext(os.path.basename(pdf_path))[0]
-    preview_dir = os.path.join(os.path.dirname(pdf_path), "md_png")
+    preview_dir = os.path.join(os.path.dirname(pdf_path), "..", "previews")
     os.makedirs(preview_dir, exist_ok=True)
     prefix = os.path.join(preview_dir, stem)
     subprocess.run(

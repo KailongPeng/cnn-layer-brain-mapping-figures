@@ -4,8 +4,8 @@
 effect size estimates"）
 
 Usage:
-    python3 -u rebuttal/BZ/rebuttal_analyses/analysis_04b_continuous_overlap_bootstrap.py --dataset nsd
-    sbatch rebuttal/BZ/rebuttal_analyses/job_04b.sh
+    python3 -u rebuttal/analyses/analysis_04b_continuous_overlap_bootstrap.py --dataset nsd
+    sbatch rebuttal/analyses/job_04b.sh
 Run from localize_paper root. 依赖 analysis_02_raw_R2_maps.py 已跑完（需要
 raw_R2_maps/ 下的 mean 图）以及 NSD per-subject/per-set 的 zscored 图。
 

@@ -10,7 +10,7 @@
 set -e
 source env_setup_brainiak.sh
 
-echo srun --mpi=pmi2 --kill-on-bad-exit=1 python3 -u Sfig3/Sfig3b/nsd_repStability_RSA_sl/sl.py "${SLURM_ARRAY_TASK_ID}" "${1}"
-srun --mpi=pmi2 --kill-on-bad-exit=1 python3 -u Sfig3/Sfig3b/nsd_repStability_RSA_sl/sl.py "${SLURM_ARRAY_TASK_ID}" "${1}"
+echo srun --mpi=pmi2 --kill-on-bad-exit=1 python3 -u figures/figure_04_nsd_localization/analysis/stability/sl.py "${SLURM_ARRAY_TASK_ID}" "${1}"
+srun --mpi=pmi2 --kill-on-bad-exit=1 python3 -u figures/figure_04_nsd_localization/analysis/stability/sl.py "${SLURM_ARRAY_TASK_ID}" "${1}"
 
 echo "done"

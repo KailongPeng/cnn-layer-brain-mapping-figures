@@ -8,7 +8,7 @@
 set -e
 source env_setup_tf1.sh
 
-echo python3 -u Sfig3/Sfig3b/nsd_dataPrepare/modelData/dataPrepare_model.py "${SLURM_ARRAY_TASK_ID}" "${1}"
-python3 -u Sfig3/Sfig3b/nsd_dataPrepare/modelData/dataPrepare_model.py "${SLURM_ARRAY_TASK_ID}" "${1}"
+echo python3 -u figures/figure_04_nsd_localization/analysis/nsd_dataPrepare/modelData/dataPrepare_model.py "${SLURM_ARRAY_TASK_ID}" "${1}"
+python3 -u figures/figure_04_nsd_localization/analysis/nsd_dataPrepare/modelData/dataPrepare_model.py "${SLURM_ARRAY_TASK_ID}" "${1}"
 
 echo "done"

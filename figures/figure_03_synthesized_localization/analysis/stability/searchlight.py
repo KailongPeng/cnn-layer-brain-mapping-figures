@@ -29,11 +29,12 @@ print(f"pandas version = {pd.__version__}")
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_03_synthesized_localization/analysis"))
 
 from utils import load_obj, save_obj, custom_run, waitForEnd, getjobID_num, check_jobArray
 
@@ -60,11 +61,11 @@ def convertFeat1toStandSpace(testMode=False, subs=[]):
             if os.path.exists(f"{subjectDir}/{sub}/preprocess/func0{run}.feat"):
                 jobarrayDict[jobarrayID] = [sub, run]
                 jobarrayID += 1
-    save_obj(jobarrayDict, f"Sfig3/Sfig3a/searchlight/convertFeat1toStandSpace_jobArray")
+    save_obj(jobarrayDict, f"figures/figure_03_synthesized_localization/analysis/stability/convertFeat1toStandSpace_jobArray")
     if testMode:
-        cmd = f"sbatch --requeue --array=1-2 Sfig3/Sfig3a/searchlight/convertFeat1toStandSpace.sh"
+        cmd = f"sbatch --requeue --array=1-2 figures/figure_03_synthesized_localization/analysis/stability/convertFeat1toStandSpace.sh"
     else:
-        cmd = f"sbatch --requeue --array=1-{len(jobarrayDict)} Sfig3/Sfig3a/searchlight/convertFeat1toStandSpace.sh"
+        cmd = f"sbatch --requeue --array=1-{len(jobarrayDict)} figures/figure_03_synthesized_localization/analysis/stability/convertFeat1toStandSpace.sh"
     sbatch_response = custom_run(cmd)
     jobID = getjobID_num(sbatch_response)
     waitForEnd(jobID)
@@ -84,12 +85,12 @@ def sl(testMode=False, subs=[]):
         for radius in [3]:
             jobarrayDict[jobarrayID] = [sub, radius]
             jobarrayID += 1
-    np.save(f"Sfig3/Sfig3a/searchlight/sl_jobArray.npy",
+    np.save(f"figures/figure_03_synthesized_localization/analysis/stability/sl_jobArray.npy",
             jobarrayDict)
     if testMode:
-        cmd = f"sbatch --array=1-1 Sfig3/Sfig3a/searchlight/sl.sh"
+        cmd = f"sbatch --array=1-1 figures/figure_03_synthesized_localization/analysis/stability/sl.sh"
     else:
-        cmd = f"sbatch --array=1-{len(jobarrayDict)} Sfig3/Sfig3a/searchlight/sl.sh"
+        cmd = f"sbatch --array=1-{len(jobarrayDict)} figures/figure_03_synthesized_localization/analysis/stability/sl.sh"
     sbatch_response = custom_run(cmd)
     jobID = getjobID_num(sbatch_response)
     waitForEnd(jobID)
@@ -111,14 +112,14 @@ def randomise(testMode=False):
         jobarrayDict[jobarrayID] = [radius]
         jobarrayID += 1
     np.save(
-        f"Sfig3/Sfig3a/searchlight/randomise_repStability_RSA_searchlight_sl_jobArray.npy",
+        f"figures/figure_03_synthesized_localization/analysis/stability/randomise_repStability_RSA_searchlight_sl_jobArray.npy",
         jobarrayDict)
     if testMode:
         cmd = (f"sbatch --requeue --array=1-1 "
-               f"Sfig3/Sfig3a/searchlight/randomise.sh")
+               f"figures/figure_03_synthesized_localization/analysis/stability/randomise.sh")
     else:
         cmd = (f"sbatch --requeue --array=1-{len(jobarrayDict)} "
-               f"Sfig3/Sfig3a/searchlight/randomise.sh")
+               f"figures/figure_03_synthesized_localization/analysis/stability/randomise.sh")
     sbatch_response = custom_run(cmd)
     jobID = getjobID_num(sbatch_response)
     waitForEnd(jobID)

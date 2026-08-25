@@ -11,7 +11,7 @@
 set -e
 source env_setup_brainiak.sh
 
-echo srun --mpi=pmi2 --kill-on-bad-exit=1 python3 -u fig4/nsd_findLayerInBrain_leaveOneSubOutReg/searchlight_score_linearModel/sl.py "${SLURM_ARRAY_TASK_ID}" "${1}" "${2:-zscored}"
-srun --mpi=pmi2 --kill-on-bad-exit=1 python3 -u fig4/nsd_findLayerInBrain_leaveOneSubOutReg/searchlight_score_linearModel/sl.py "${SLURM_ARRAY_TASK_ID}" "${1}" "${2:-zscored}"
+echo srun --mpi=pmi2 --kill-on-bad-exit=1 python3 -u figures/figure_04_nsd_localization/analysis/nsd_findLayerInBrain_leaveOneSubOutReg/searchlight_score_linearModel/sl.py "${SLURM_ARRAY_TASK_ID}" "${1}" "${2:-zscored}"
+srun --mpi=pmi2 --kill-on-bad-exit=1 python3 -u figures/figure_04_nsd_localization/analysis/nsd_findLayerInBrain_leaveOneSubOutReg/searchlight_score_linearModel/sl.py "${SLURM_ARRAY_TASK_ID}" "${1}" "${2:-zscored}"
 
 echo "done"

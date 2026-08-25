@@ -30,11 +30,12 @@ print(f"pandas version = {pd.__version__}")
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_04_nsd_localization/analysis"))
 
 from utils import load_obj, save_obj, custom_run, waitForEnd, getjobID_num, check_jobArray, getSubs, setupPaths
 from utils import custom_and
@@ -109,7 +110,7 @@ def sl(testMode=False, subs=None, whichSet_1=None):
                                      4691,
                                      4787,
                                      4836]
-                sharedImageIndex = pd.read_csv(f"Sfig3/Sfig3b/nsd_dataPrepare/sharedImageIndex.csv")
+                sharedImageIndex = pd.read_csv(f"figures/figure_04_nsd_localization/analysis/nsd_dataPrepare/sharedImageIndex.csv")
 
                 sub_i = float(sub[-1])
                 columnNames = []
@@ -176,12 +177,12 @@ def sl(testMode=False, subs=None, whichSet_1=None):
             jobarrayDict[jobarrayID] = [sub, radius, currSet + 1, setOf16Images, testMode]
             jobarrayID += 1
     np.save(
-        f"Sfig3/Sfig3b/nsd_repStability_RSA_sl/sl__nsd_repStability_RSA_searchlight_sl_jobArray_whichSet_1_{whichSet_1}.npy",
+        f"figures/figure_04_nsd_localization/analysis/stability/sl__nsd_repStability_RSA_searchlight_sl_jobArray_whichSet_1_{whichSet_1}.npy",
         jobarrayDict)
     if testMode:
-        cmd = f"sbatch --array=1-1 Sfig3/Sfig3b/nsd_repStability_RSA_sl/sl.sh {whichSet_1}"
+        cmd = f"sbatch --array=1-1 figures/figure_04_nsd_localization/analysis/stability/sl.sh {whichSet_1}"
     else:
-        cmd = f"sbatch --array=1-{len(jobarrayDict)} Sfig3/Sfig3b/nsd_repStability_RSA_sl/sl.sh {whichSet_1}"
+        cmd = f"sbatch --array=1-{len(jobarrayDict)} figures/figure_04_nsd_localization/analysis/stability/sl.sh {whichSet_1}"
     sbatch_response = custom_run(cmd)
     jobID = getjobID_num(sbatch_response)
     waitForEnd(jobID)
@@ -206,14 +207,14 @@ def randomise(testMode=False, whichSet_1=None):
         jobarrayDict[jobarrayID] = [radius, currSet + 1]
         jobarrayID += 1
     np.save(
-        f"Sfig3/Sfig3b/nsd_repStability_RSA_sl/randomise__repStability_RSA_searchlight_sl_jobArray_whichSet_1_{whichSet_1}.npy",
+        f"figures/figure_04_nsd_localization/analysis/stability/randomise__repStability_RSA_searchlight_sl_jobArray_whichSet_1_{whichSet_1}.npy",
         jobarrayDict)
     if testMode:
         cmd = (f"sbatch --requeue --array=1-1 "
-               f"Sfig3/Sfig3b/nsd_repStability_RSA_sl/randomise.sh {whichSet_1} 1 ")
+               f"figures/figure_04_nsd_localization/analysis/stability/randomise.sh {whichSet_1} 1 ")
     else:
         cmd = (f"sbatch --requeue --array=1-{len(jobarrayDict)} "
-               f"Sfig3/Sfig3b/nsd_repStability_RSA_sl/randomise.sh {whichSet_1} 0")
+               f"figures/figure_04_nsd_localization/analysis/stability/randomise.sh {whichSet_1} 0")
     sbatch_response = custom_run(cmd)
     jobID = getjobID_num(sbatch_response)
     waitForEnd(jobID)

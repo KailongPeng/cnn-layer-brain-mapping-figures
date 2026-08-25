@@ -4,7 +4,7 @@
 
 基于 fig3a/searchlight_score_linearModel/sl.py，仅修改打乱逻辑：
   原始（错误）：np.random.shuffle(上三角120个元素)
-  修正（正确）：随机打乱16个刺激标签，同时重排brain searchlight RSM的行和列（Mantel test）
+  修正（正确）：随机打乱16个刺激标签，同时重排RSM的行和列（Mantel test）
 
 用法：由 sl.sh 通过 srun --mpi=pmi2 调用
   srun --mpi=pmi2 python3 -u .../sl.py ${SLURM_ARRAY_TASK_ID}
@@ -32,11 +32,12 @@ from sklearn.metrics import r2_score
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_03_synthesized_localization/analysis"))
 
 from utils import save_nib, setupPaths, getSubs
 [subjectDir, scratchResultFolder] = setupPaths()
@@ -44,7 +45,7 @@ print(f"subjectDir={subjectDir}")
 print(f"scratchResultFolder={scratchResultFolder}")
 
 jobarrayDict = np.load(
-    f"rebuttal/BZ/rebuttal_analyses/corrected_permutation/sl_jobArray.npy",
+    f"figures/figure_03_synthesized_localization/analysis/corrected_permutation/sl_jobArray.npy",
     allow_pickle=True)
 
 jobarrayDict = dict(enumerate(jobarrayDict.flatten(), 1))[1]
@@ -148,13 +149,13 @@ if not os.path.exists(finalSavingFile):
         # 真实 R²（与原始一致）
         true_R2_ = custom_linear_score(CNNlayerFingerprint, voxelCubeFingerprint, _coef_, _intercept_)
 
-        # *** 修正的置换检验：按 Methods 重排 held-out brain searchlight RSM ***
+        # *** 修正的置换检验 ***
         shuffled_R2 = np.zeros(repetitionNumber)
         for iii in range(repetitionNumber):
             # 原始（错误）：np.random.shuffle(CNNlayerFingerprint_shuffled)
-            # 修正（正确）：打乱刺激标签，协调重排 brain searchlight RSM 的行列
-            voxelCubeFingerprint_shuffled = shuffle_rsm_stimulus_labels(voxelCubeFingerprint)
-            random_R2 = custom_linear_score(CNNlayerFingerprint, voxelCubeFingerprint_shuffled,
+            # 修正（正确）：打乱刺激标签，行列协调重排
+            CNNlayerFingerprint_shuffled = shuffle_rsm_stimulus_labels(CNNlayerFingerprint)
+            random_R2 = custom_linear_score(CNNlayerFingerprint_shuffled, voxelCubeFingerprint,
                                             _coef_, _intercept_)
             shuffled_R2[iii] = random_R2
 

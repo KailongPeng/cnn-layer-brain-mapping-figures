@@ -28,14 +28,15 @@ from scipy import stats
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_06_residual_localization/analysis"))
 
 from utils import save_nib, setupPaths, get_nsd_Subs
-from rebuttal.BZ.rebuttal_analyses.sfig18_nifti_validation import (
+from sfig18_nifti_validation import (
     EXPECTED_AFFINE,
     atomic_save_nifti,
     validate_nifti,
@@ -44,7 +45,7 @@ from rebuttal.BZ.rebuttal_analyses.sfig18_nifti_validation import (
 print(f"subjectDir={subjectDir}")
 print(f"scratchResultFolder={scratchResultFolder}")
 
-jobarrayDict = np.load(f"nsd_residualModel/searchlight_score_linearModel/"
+jobarrayDict = np.load(f"figures/figure_06_residual_localization/analysis/searchlight_score_linearModel/"
                        f"sl_jobArray_whichSet_1_{int(float(sys.argv[2]))}.npy",
                        allow_pickle=True)
 
@@ -96,6 +97,18 @@ def get_nsd_Subs(minusSub=None):
 
 otherSubs = get_nsd_Subs(minusSub=subject)
 
+
+def permute_rsm_stimulus_labels(rsm, permutation):
+    """Reorder both axes of an RSM with one stimulus-label permutation."""
+    rsm = np.asarray(rsm)
+    permutation = np.asarray(permutation)
+    if rsm.shape != (16, 16):
+        raise ValueError(f"expected a 16 x 16 RSM, got {rsm.shape}")
+    if not np.array_equal(np.sort(permutation), np.arange(16)):
+        raise ValueError("permutation must contain each stimulus index exactly once")
+    return rsm[np.ix_(permutation, permutation)]
+
+
 if not outputReady:
     def ModelReg(_data, sl_mask, myrad, bcvar):
         triu = np.triu_indices(16, 1)
@@ -122,11 +135,11 @@ if not outputReady:
         if testMode:
             assert bolddata_sl.shape == (16, 7 * 7 * 7)
 
-        voxelCubeFingerprint = np.corrcoef(bolddata_sl)
+        voxelCubeRSM = np.corrcoef(bolddata_sl)
 
         if testMode:
-            assert voxelCubeFingerprint.shape == (16, 16)
-        voxelCubeFingerprint = voxelCubeFingerprint[triu]
+            assert voxelCubeRSM.shape == (16, 16)
+        voxelCubeFingerprint = voxelCubeRSM[triu]
         voxelCubeFingerprint = stats.zscore(voxelCubeFingerprint)
         if testMode:
             print(f"np.mean(voxelCubeFingerprint)={np.mean(voxelCubeFingerprint)}")
@@ -182,10 +195,22 @@ if not outputReady:
 
             shuffled_R2 = np.zeros(repetitionNumber)
             for iii in range(repetitionNumber):
-                voxelCubeFingerprint_shuffled = voxelCubeFingerprint.copy()
-                np.random.shuffle(voxelCubeFingerprint_shuffled)
-                random_R2 = custom_linear_score_shuffle(_y_=voxelCubeFingerprint_shuffled,
-                                                    _y_pred_residual=y_pred_residual)
+                permutation = np.random.permutation(16)
+                voxelCubeFingerprint_shuffled = permute_rsm_stimulus_labels(
+                    voxelCubeRSM, permutation
+                )[triu]
+                voxelCubeFingerprint_shuffled = stats.zscore(
+                    voxelCubeFingerprint_shuffled
+                )
+                valid = ~np.isnan(voxelCubeFingerprint_shuffled)
+                y_pred_residual_shuffled = (
+                    _coef_residual * features[layer_1][valid]
+                    + _intercept_residual
+                )
+                random_R2 = custom_linear_score_shuffle(
+                    _y_=voxelCubeFingerprint_shuffled[valid],
+                    _y_pred_residual=y_pred_residual_shuffled,
+                )
                 shuffled_R2[iii] = random_R2
 
             shuffled_R2_mean = np.nanmean(shuffled_R2)

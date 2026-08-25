@@ -1,5 +1,5 @@
 # Usage:
-#   python3 -u Sfig3/Sfig3a/searchlight/merge_within_minus_between.py
+#   python3 -u figures/figure_03_synthesized_localization/analysis/stability/merge_within_minus_between.py
 # Run from localize_paper root AFTER all 30 subjects' (edited) sl.py jobs finish.
 # Averages within_minus_between_sl.nii.gz across subjects -> group mean map.
 #
@@ -16,8 +16,9 @@ import numpy as np
 import nibabel as nib
 
 current_dir = os.getcwd()
-assert current_dir.endswith('localize_paper')
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures'))
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_03_synthesized_localization/analysis"))
 from utils import save_nib, setupPaths, getSubs
 
 subs = getSubs()

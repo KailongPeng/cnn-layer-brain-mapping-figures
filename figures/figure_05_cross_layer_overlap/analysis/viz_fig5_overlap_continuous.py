@@ -1,6 +1,6 @@
 # Usage:
-#   python3 -u rebuttal/BZ/rebuttal_analyses/viz_fig5_overlap_continuous.py
-#   sbatch rebuttal/BZ/rebuttal_analyses/viz_fig5_overlap_continuous.sh
+#   python3 -u rebuttal/analyses/viz_fig5_overlap_continuous.py
+#   sbatch rebuttal/analyses/viz_fig5_overlap_continuous.sh
 # Run from localize_paper root directory.
 
 """
@@ -71,9 +71,9 @@ def resolve_data_dir():
 
 
 CONT_DIR = resolve_data_dir()
-PAPER_FIG_DIR = "rebuttal/BZ/paper_figures"
+PAPER_FIG_DIR = "figures/components"
 os.makedirs(PAPER_FIG_DIR, exist_ok=True)
-UPLOAD_PDF = os.path.join(PAPER_FIG_DIR, "upload_to_figure",
+UPLOAD_PDF = os.path.join(PAPER_FIG_DIR, "..", "final",
                           "fig5_overlap_continuous_BCDE.pdf")
 
 N_LAYERS = 12
@@ -397,7 +397,7 @@ def main():
     # 论文图只保留 A-D 面板字母。页面总标题与各面板说明均由 caption 承担。
 
     out_pdf = os.path.join(PAPER_FIG_DIR, "fig5_overlap_continuous_BCDE.pdf")
-    out_png = os.path.join(PAPER_FIG_DIR, "md_png", "fig5_overlap_continuous_BCDE.png")
+    out_png = os.path.join(PAPER_FIG_DIR, "..", "previews", "fig5_overlap_continuous_BCDE.png")
     os.makedirs(os.path.dirname(out_png), exist_ok=True)
     fig.savefig(out_pdf, bbox_inches='tight', transparent=True)
     fig.savefig(out_png, dpi=200, bbox_inches='tight')

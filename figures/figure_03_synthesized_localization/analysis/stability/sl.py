@@ -28,11 +28,12 @@ from sklearn.metrics import r2_score
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_03_synthesized_localization/analysis"))
 
 from utils import save_nib, setupPaths, getSubs
 
@@ -41,7 +42,7 @@ print(f"subjectDir={subjectDir}")
 print(f"scratchResultFolder={scratchResultFolder}")
 
 jobarrayDict = np.load(
-    f"Sfig3/Sfig3a/searchlight/sl_jobArray.npy",
+    f"figures/figure_03_synthesized_localization/analysis/stability/sl_jobArray.npy",
     allow_pickle=True)
 jobarrayDict = dict(enumerate(jobarrayDict.flatten(), 1))[1]
 print(f"jobarrayDict={jobarrayDict}")

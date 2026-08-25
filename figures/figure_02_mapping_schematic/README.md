@@ -1,15 +1,15 @@
-# Figure 2 — Mapping model layers to the brain
+# Figure 2: Mapping model layers to the brain
 
-Figure 2 is a conceptual schematic of the model-to-brain mapping problem. It
-connects model-layer representations, brain representations, and the
-searchlight comparison used in Figures 3, 4, and 6.
+Figure 2 is a schematic of the analysis rather than the output of a numerical
+script. It shows how a CNN layer RSM and a searchlight brain RSM are reduced to
+matching 120-element fingerprints and compared with leave-one-participant-out
+regression.
 
-This first migration records the figure-level scientific contract here. There
-is no separate numerical analysis script for this schematic; the executable
-mapping procedures live in the analysis directories for Figures 3, 4, and 6.
+The executable versions of this procedure are stored with the figures that
+use it:
 
-## Relation to the paper
+- Figure 3 contains the synthesized-image searchlight analysis.
+- Figure 4 contains the non-residual NSD searchlight analysis.
+- Figure 6 contains the residual NSD searchlight analysis.
 
-The schematic summarizes the *Defining image representations*,
-*Searchlight analysis of representational stability*, and *Mapping model
-layers in the brain* subsections of the Methods in `main_tex.md`.
+No PDF assembly or illustration-editing source is included for this schematic.

@@ -9,7 +9,7 @@
 set -e
 source env_setup_analysis.sh
 
-echo python3 -u Sfig3/Sfig3a/searchlight/searchlight.py
-python3 -u Sfig3/Sfig3a/searchlight/searchlight.py
+echo python3 -u figures/figure_03_synthesized_localization/analysis/stability/searchlight.py
+python3 -u figures/figure_03_synthesized_localization/analysis/stability/searchlight.py
 
 echo "done"

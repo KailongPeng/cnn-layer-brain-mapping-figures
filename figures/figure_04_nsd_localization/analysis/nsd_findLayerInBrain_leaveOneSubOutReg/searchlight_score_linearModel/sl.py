@@ -27,18 +27,19 @@ from sklearn.metrics import r2_score
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_04_nsd_localization/analysis"))
 
 from utils import save_nib, setupPaths, get_nsd_Subs
 [subjectDir, scratchResultFolder] = setupPaths()
 print(f"subjectDir={subjectDir}")
 print(f"scratchResultFolder={scratchResultFolder}")
 
-jobarrayDict = np.load(f"fig4/nsd_findLayerInBrain_leaveOneSubOutReg/searchlight_score_linearModel/"
+jobarrayDict = np.load(f"figures/figure_04_nsd_localization/analysis/nsd_findLayerInBrain_leaveOneSubOutReg/searchlight_score_linearModel/"
                        f"sl_jobArray_whichSet_1_{int(float(sys.argv[2]))}.npy",
                        allow_pickle=True)
 
@@ -82,6 +83,18 @@ def get_nsd_Subs(minusSub=None):
 
 otherSubs = get_nsd_Subs(minusSub=subject)
 
+
+def permute_rsm_stimulus_labels(rsm, permutation):
+    """Reorder both axes of an RSM with one stimulus-label permutation."""
+    rsm = np.asarray(rsm)
+    permutation = np.asarray(permutation)
+    if rsm.shape != (16, 16):
+        raise ValueError(f"expected a 16 x 16 RSM, got {rsm.shape}")
+    if not np.array_equal(np.sort(permutation), np.arange(16)):
+        raise ValueError("permutation must contain each stimulus index exactly once")
+    return rsm[np.ix_(permutation, permutation)]
+
+
 if not os.path.exists(finalSavingFile):
     def ModelReg(_data, sl_mask, myrad, bcvar):
         features = bcvar
@@ -110,10 +123,10 @@ if not os.path.exists(finalSavingFile):
 
         assert bolddata_sl.shape == (16, 7 * 7 * 7)
 
-        voxelCubeFingerprint = np.corrcoef(bolddata_sl)
+        voxelCubeRSM = np.corrcoef(bolddata_sl)
         CNNlayerFingerprints = []
-        assert voxelCubeFingerprint.shape == (16, 16)
-        voxelCubeFingerprint = voxelCubeFingerprint[triu]
+        assert voxelCubeRSM.shape == (16, 16)
+        voxelCubeFingerprint = voxelCubeRSM[triu]
         CNNlayerFingerprint = np.copy(features[layer_1])
         CNNlayerFingerprint = CNNlayerFingerprint[triu]
 
@@ -146,10 +159,16 @@ if not os.path.exists(finalSavingFile):
 
         shuffled_R2 = np.zeros(repetitionNumber)
         for iii in range(repetitionNumber):
-            CNNlayerFingerprint_shuffled = CNNlayerFingerprint.copy()
-            np.random.shuffle(CNNlayerFingerprint_shuffled)
-            random_R2 = custom_linear_score(CNNlayerFingerprint_shuffled, voxelCubeFingerprint,
-                                        _coef_, _intercept_)
+            permutation = np.random.permutation(16)
+            voxelCubeFingerprint_shuffled = permute_rsm_stimulus_labels(
+                voxelCubeRSM, permutation
+            )[triu]
+            random_R2 = custom_linear_score(
+                CNNlayerFingerprint,
+                voxelCubeFingerprint_shuffled,
+                _coef_,
+                _intercept_,
+            )
             shuffled_R2[iii] = random_R2
 
         All_R2_ = np.zeros(repetitionNumber + 1)

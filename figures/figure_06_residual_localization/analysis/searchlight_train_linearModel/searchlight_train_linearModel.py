@@ -30,11 +30,12 @@ print(f"pandas version = {pd.__version__}")
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_06_residual_localization/analysis"))
 
 from utils import load_obj, save_obj, custom_run, waitForEnd, getjobID_num, check_jobArray, getSubs, setupPaths, \
     check_jobIDs
@@ -154,14 +155,14 @@ def sl(testMode=False, subs=None, whichSet_1=None):
                                    13):
                     jobarrayDict[jobarrayID] = [sub, radius, method, layer, whichSet_1 + 1, setOf16Images, testMode]
                     jobarrayID += 1
-    np.save(f"nsd_residualModel/searchlight_train_linearModel/sl_jobArray_whichSet_1_{whichSet_1}.npy",
+    np.save(f"figures/figure_06_residual_localization/analysis/searchlight_train_linearModel/sl_jobArray_whichSet_1_{whichSet_1}.npy",
             jobarrayDict)
     if testMode:
         cmd = (f"sbatch --requeue --array=1-1 "
-               f"nsd_residualModel/searchlight_train_linearModel/sl.sh {whichSet_1}")
+               f"figures/figure_06_residual_localization/analysis/searchlight_train_linearModel/sl.sh {whichSet_1}")
     else:
         cmd = (f"sbatch --requeue --array=1-{len(jobarrayDict)} "
-               f"nsd_residualModel/searchlight_train_linearModel/sl.sh {whichSet_1}")
+               f"figures/figure_06_residual_localization/analysis/searchlight_train_linearModel/sl.sh {whichSet_1}")
     sbatch_response = custom_run(cmd)
     jobID = getjobID_num(sbatch_response)
     waitForEnd(jobID)

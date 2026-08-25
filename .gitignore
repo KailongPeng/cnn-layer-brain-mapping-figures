@@ -8,16 +8,17 @@ outputs/
 *.nii
 *.nii.gz
 *.npy
-!image_synthesis/assets/16corr_GradOrth.npy
+!figures/figure_01_image_synthesis/assets/16corr_GradOrth.npy
+*.pkl
+!figures/figure_01_image_synthesis/assets/bestchans16.pkl
+!figures/figure_01_image_synthesis/assets/corrsvals16.pkl
 *.npz
 *.csv
 *.pdf
 *.png
-image_synthesis/assets/tensorflow_inception_graph.pb
+figures/figure_01_image_synthesis/assets/tensorflow_inception_graph.pb
 
 # Local provenance and migration notes.  These files may contain internal
 # paths, cluster details, or other release-only bookkeeping.
 _private/
 **/_private/
-.lcp_source/
-**/.lcp_source/

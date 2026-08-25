@@ -30,11 +30,12 @@ print(f"pandas version = {pd.__version__}")
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_04_nsd_localization/analysis"))
 
 from utils import load_obj, save_obj, custom_run, waitForEnd, getjobID_num, check_jobArray, getSubs, setupPaths
 from utils import custom_and
@@ -45,7 +46,7 @@ print(f"subjectDir={subjectDir}")
 print(f"scratchResultFolder={scratchResultFolder}")
 
 jobarrayDict = load_obj(
-    f"Sfig3/Sfig3b/nsd_dataPrepare/brainData/nsd_dataPrepare_brain_whichSet_1_{int(float(sys.argv[2]))}")
+    f"figures/figure_04_nsd_localization/analysis/nsd_dataPrepare/brainData/nsd_dataPrepare_brain_whichSet_1_{int(float(sys.argv[2]))}")
 
 jobarrayID = int(float(sys.argv[1]))
 [imgID, sub_i] = jobarrayDict[jobarrayID]
@@ -61,7 +62,7 @@ if not os.path.exists(two_mm):
             print(f"already exists: {nsd_result_folder}/brainData/data/sub_i{sub_i}_imgID{imgID}.npy")
             return
         sharedImageIndex = pd.read_csv(
-            f"Sfig3/Sfig3b/nsd_dataPrepare/sharedImageIndex.csv")
+            f"figures/figure_04_nsd_localization/analysis/nsd_dataPrepare/sharedImageIndex.csv")
         sharedImageIndex_t = sharedImageIndex[
             custom_and([
                 sharedImageIndex['imgID'] == imgID,

@@ -8,7 +8,7 @@
 set -e
 source env_setup_analysis.sh
 
-echo python3 -u Sfig3/Sfig3b/nsd_repStability_RSA_sl/searchlight.py "${1}" "${2}"
-python3 -u Sfig3/Sfig3b/nsd_repStability_RSA_sl/searchlight.py "${1}" "${2}"
+echo python3 -u figures/figure_04_nsd_localization/analysis/stability/searchlight.py "${1}" "${2}"
+python3 -u figures/figure_04_nsd_localization/analysis/stability/searchlight.py "${1}" "${2}"
 
 echo "done"

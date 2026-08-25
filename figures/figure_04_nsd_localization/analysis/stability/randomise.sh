@@ -15,7 +15,7 @@ whichSet_1=${1}
 testMode=${2}
 echo whichSet_1="${whichSet_1}"
 echo testMode="${testMode}"
-read -r radius whichSet scratchResultFolder <<< "$(python3 -u Sfig3/Sfig3b/nsd_repStability_RSA_sl/loadParameter.py ${SLURM_ARRAY_TASK_ID} ${whichSet_1})"
+read -r radius whichSet scratchResultFolder <<< "$(python3 -u figures/figure_04_nsd_localization/analysis/stability/loadParameter.py ${SLURM_ARRAY_TASK_ID} ${whichSet_1})"
 echo "radius=${radius} whichSet=${whichSet}"
 echo "scratchResultFolder=${scratchResultFolder}"
 
@@ -45,8 +45,8 @@ AllSubs="${savePath}/subs_compiled.nii.gz"
 outPre="${savePath}/_"
 
 
-echo python3 -u fig3a/shuffleNorm/loop_fslmerge.py "${AllSubs}" "${fileList}"
-python3 -u fig3a/shuffleNorm/loop_fslmerge.py "${AllSubs}" "${fileList}"
+echo python3 -u figures/figure_04_nsd_localization/analysis/loop_fslmerge.py "${AllSubs}" "${fileList}"
+python3 -u figures/figure_04_nsd_localization/analysis/loop_fslmerge.py "${AllSubs}" "${fileList}"
 
 
 if [ "${testMode}" == 1 ]; then

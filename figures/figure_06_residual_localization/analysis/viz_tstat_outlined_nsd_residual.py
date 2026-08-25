@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from config import N_LAYERS, REBUTTAL_OUTPUT  # noqa: E402
 from sfig18_nifti_validation import atomic_save_nifti  # noqa: E402
 
-sys.path.append("display_surface_plot")
+sys.path.append("figures/figure_06_residual_localization/analysis/display_surface_plot")
 from display_surface_plot import (  # noqa: E402
     _nsd_residual_meanacross_tstat_and_mask,
     fdr_significant_mask,
@@ -25,10 +25,10 @@ from viz_tstat_outlined_synthesized import validate_pdf_output  # noqa: E402
 
 
 NC_VIZ_DIR = os.path.join(REBUTTAL_OUTPUT, "noise_ceiling_viz")
-PAPER_FIG_DIR = os.path.join(os.path.dirname(__file__), "..", "paper_figures")
+PAPER_FIG_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "figures", "components")
 OUT_PDF = os.path.join(PAPER_FIG_DIR, "tstat_surface_outlined_nsd_residual.pdf")
 FDR_ALPHA = 0.05
-DEFAULT_VMAX = 11.0  # current Figure 6A scale; verify with diag_fig6_vmax.py
+DEFAULT_VMAX = 11.0
 
 
 def contour_mask_path(layer):
@@ -96,7 +96,7 @@ def save_md_png_preview(pdf_path):
         print("Skipping optional PNG preview: pdftoppm is not installed.")
         return
     stem = os.path.splitext(os.path.basename(pdf_path))[0]
-    preview_dir = os.path.join(os.path.dirname(pdf_path), "md_png")
+    preview_dir = os.path.join(os.path.dirname(pdf_path), "..", "previews")
     os.makedirs(preview_dir, exist_ok=True)
     preview_path = os.path.join(preview_dir, stem)
     subprocess.run(

@@ -9,7 +9,7 @@
 set -e
 source env_setup_analysis.sh
 
-echo python3 -u nsd_residualModel/searchlight_train_linearModel/searchlight_train_linearModel.py "${1}" "${2}"
-python3 -u nsd_residualModel/searchlight_train_linearModel/searchlight_train_linearModel.py "${1}" "${2}"
+echo python3 -u figures/figure_06_residual_localization/analysis/searchlight_train_linearModel/searchlight_train_linearModel.py "${1}" "${2}"
+python3 -u figures/figure_06_residual_localization/analysis/searchlight_train_linearModel/searchlight_train_linearModel.py "${1}" "${2}"
 
 echo "done"

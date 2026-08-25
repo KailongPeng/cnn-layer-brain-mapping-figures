@@ -29,11 +29,12 @@ print(f"pandas version = {pd.__version__}")
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_03_synthesized_localization/analysis"))
 
 from utils import load_obj, save_obj, custom_run, waitForEnd, getjobID_num, check_jobArray
 
@@ -46,7 +47,7 @@ from utils import save_nib, setupPaths
 print(f"subjectDir={subjectDir}")
 print(f"scratchResultFolder={scratchResultFolder}")
 
-jobarrayDict = load_obj(f"Sfig3/Sfig3a/searchlight/convertFeat1toStandSpace_jobArray")
+jobarrayDict = load_obj(f"figures/figure_03_synthesized_localization/analysis/stability/convertFeat1toStandSpace_jobArray")
 jobarrayID = int(float(sys.argv[1]))
 [sub, currRun] = jobarrayDict[jobarrayID]
 print(f"sub={sub} currRun={currRun}")

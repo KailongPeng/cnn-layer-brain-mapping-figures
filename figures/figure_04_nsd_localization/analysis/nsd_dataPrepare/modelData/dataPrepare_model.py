@@ -19,11 +19,12 @@ print(f"CONDA_DEFAULT_ENV={os.environ['CONDA_DEFAULT_ENV']}")
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_04_nsd_localization/analysis"))
 
 from utils import load_obj, save_obj, custom_run, waitForEnd, getjobID_num, check_jobArray, getSubs, setupPaths
 from utils import custom_and
@@ -618,7 +619,7 @@ print(f"jobarrayID={jobarrayID}")
 whichSet_1 = int(float(sys.argv[2]))
 whichSet = whichSet_1 + 1
 print(f"whichSet_1={whichSet_1}")
-jobarrayDict = load_obj(f"Sfig3/Sfig3b/nsd_dataPrepare/modelData/nsd_dataPrepare_model_whichSet_1_{whichSet_1}")
+jobarrayDict = load_obj(f"figures/figure_04_nsd_localization/analysis/nsd_dataPrepare/modelData/nsd_dataPrepare_model_whichSet_1_{whichSet_1}")
 jobarrayID = int(float(sys.argv[1]))
 [setOf16Images] = jobarrayDict[jobarrayID]
 print(f"setOf16Images={setOf16Images}")

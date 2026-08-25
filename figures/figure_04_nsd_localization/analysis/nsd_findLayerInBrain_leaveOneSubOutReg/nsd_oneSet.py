@@ -30,11 +30,12 @@ print(f"pandas version = {pd.__version__}")
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_04_nsd_localization/analysis"))
 
 from utils import load_obj, save_obj, custom_run, waitForEnd, getjobID_num, check_jobArray, getSubs, setupPaths, check_jobIDs
 
@@ -48,7 +49,7 @@ print(f"scratchResultFolder={scratchResultFolder}")
 
 def sl_RSA_findLayerInBrain(testMode=False, whichSet_1=None):
     def searchlight_train_linearModel(testMode=False, whichSet_1=None):
-        cmd = (f"sbatch fig4/nsd_findLayerInBrain_leaveOneSubOutReg/"
+        cmd = (f"sbatch figures/figure_04_nsd_localization/analysis/nsd_findLayerInBrain_leaveOneSubOutReg/"
                f"searchlight_train_linearModel/searchlight_train_linearModel.sh {whichSet_1} {testMode}")
         sbatch_response = custom_run(cmd)
         jobID = getjobID_num(sbatch_response)
@@ -58,7 +59,7 @@ def sl_RSA_findLayerInBrain(testMode=False, whichSet_1=None):
     searchlight_train_linearModel(testMode=testMode, whichSet_1=whichSet_1)
 
     def searchlight_score_linearModel():
-        cmd = f"sbatch fig4/nsd_findLayerInBrain_leaveOneSubOutReg/searchlight_score_linearModel/searchlight_score_linearModel.sh  {whichSet_1} {testMode}"
+        cmd = f"sbatch figures/figure_04_nsd_localization/analysis/nsd_findLayerInBrain_leaveOneSubOutReg/searchlight_score_linearModel/searchlight_score_linearModel.sh  {whichSet_1} {testMode}"
         sbatch_response = custom_run(cmd)
         jobID = getjobID_num(sbatch_response)
         waitForEnd(jobID)
@@ -66,17 +67,7 @@ def sl_RSA_findLayerInBrain(testMode=False, whichSet_1=None):
 
     searchlight_score_linearModel()
 
-    def randomise(testMode=False, whichSet_1=None):
-        cmd = f"sbatch fig4/nsd_findLayerInBrain_leaveOneSubOutReg/randomise/findLayerInBrain_randomise.sh {whichSet_1} {testMode}"
-        sbatch_response = custom_run(cmd)
-        jobID = getjobID_num(sbatch_response)
-        waitForEnd(jobID)
-        completed = check_jobIDs([jobID])
-
-    randomise(testMode=testMode, whichSet_1=whichSet_1)
-
-
-jobarrayDict = load_obj(f"fig4/nsd_findLayerInBrain_leaveOneSubOutReg/nsd_oneSet_jobdict")
+jobarrayDict = load_obj(f"figures/figure_04_nsd_localization/analysis/nsd_findLayerInBrain_leaveOneSubOutReg/nsd_oneSet_jobdict")
 
 jobarrayID = int(float(sys.argv[1]))
 [_whichSets_1, testMode] = jobarrayDict[jobarrayID]

@@ -18,9 +18,67 @@ print(f"CONDA_DEFAULT_ENV={os.environ['CONDA_DEFAULT_ENV']}")
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), \
+    f"Run from the localize_paper or cnn-layer-brain-mapping-figures repository root, not {current_dir}"
 
 print(f"Current directory is: {current_dir}")
+
+figure_dir = os.path.join(current_dir, 'figures', 'figure_01_image_synthesis')
+asset_dir = os.path.join(figure_dir, 'assets')
+
+# --- 可复现性 ---
+# 原代码有两处未播种的随机: np.random.shuffle(choose) 决定 mixed3a 层 16 个通道的
+# 配对顺序(通道 i 配目标矩阵的第 i 个值), gen_crops 里的 np.random.normal 决定每轮
+# foveated 裁剪位置。两者都没播种, 所以同样的种子图 + 同样的代码, 两次运行轨迹也不同,
+# 结果无法复现、也无法把一次异常归因到某个具体输入。这里统一播种, 可用环境变量覆盖。
+SYNTH_SEED = int(os.environ.get('SYNTH_SEED', '0'))
+np.random.seed(SYNTH_SEED)
+print(f"SYNTH_SEED={SYNTH_SEED}")
+
+# RDM 行判别式 dim*sum(x^2)-(sum x)^2 低于此值即告警: 该值趋 0 表示某层的 16 个 RDM
+# 取值趋于常数, 相关系数分母趋 0 —— 既是 NaN 的直接来源, 也可能说明优化正落进
+# "把 RDM 压成常数" 这个退化解(常数向量与任何向量的相关都可视为 0, 是压低目标函数的捷径)。
+DEGENERACY_WARN = float(os.environ.get('DEGENERACY_WARN', '1e-3'))
+
+# 逐图日志(每轮 16 次 _LOSS2_ + 16 次 a/b/angle, 共 32 行)默认关掉: 刷屏且淹没
+# [DEGENERACY]/[PROFILE]/[STAGE DONE] 这些真正要看的行。数值本身照常存进
+# Vars.pkl 的 _LOSS2_Container / compareg1g2List, 关掉打印不丢数据。
+# 需要逐图排查时 SYNTH_VERBOSE=1。
+VERBOSE_PER_IMAGE = os.environ.get('SYNTH_VERBOSE', '0') == '1'
+
+# --- 进度/ETA 记账 ---
+JOB_START = time.time()
+ITERS_BY_MAG = {0: 400, 1: 400, 2: 400, 3: 600}   # 与 tfLoop 里的 iters 分配一致, 合计 1800
+TOTAL_ITERS = sum(ITERS_BY_MAG.values())
+
+
+STAGE_AVG = {}      # mag -> 实测平均秒/轮, 每阶段结束时填入, 用于自我校正后续阶段的估计
+
+
+def _typical(vals):
+    """取中位数而非平均: 第 0 轮含 cuDNN autotune / XLA 编译, 比常态慢一个量级,
+    用平均数会被这一个离群值拖歪整整一个窗口(实测前 20 轮的剩余时间估计会高 1.5~12 倍),
+    中位数只要 3 个样本就能给出正确的常态速率, 对偶发的调度卡顿同样稳健。"""
+    if len(vals) < 3:
+        return float('nan')
+    ordered = sorted(vals)
+    mid = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[mid]
+    return (ordered[mid - 1] + ordered[mid]) / 2.0
+
+
+def _fmt_dur(sec):
+    if sec is None or sec != sec or sec < 0:
+        return '?'
+    sec = int(sec)
+    h, rem = divmod(sec, 3600)
+    m, s = divmod(rem, 60)
+    if h:
+        return '{}h{:02d}m'.format(h, m)
+    if m:
+        return '{}m{:02d}s'.format(m, s)
+    return '{}s'.format(s)
 
 
 def load_seed_manifest(manifest_path, expected_n=16):
@@ -48,7 +106,7 @@ def tfLoop(previousMag, previousPhase, continueFlag):
     print('previousMag=', previousMag)
     print('previousPhase=', previousPhase)
 
-    model_fn = f"{current_dir}/utils/tensorflow_inception_graph.pb"
+    model_fn = os.path.join(asset_dir, 'tensorflow_inception_graph.pb')
 
     graph = tf.Graph()
     with graph.as_default(), graph.device('/cpu:0'), tf.Session() as sess:
@@ -257,8 +315,8 @@ def tfLoop(previousMag, previousPhase, continueFlag):
 
     numImages = 16
 
-    bestchansfile = '{}/utils/bestchans{}.pkl'.format(current_dir, numImages)
-    corrsvalsfile = '{}/utils/corrsvals{}.pkl'.format(current_dir, numImages)
+    bestchansfile = os.path.join(asset_dir, 'bestchans{}.pkl'.format(numImages))
+    corrsvalsfile = os.path.join(asset_dir, 'corrsvals{}.pkl'.format(numImages))
     if not os.path.exists(bestchansfile):
         bestchandict = {}
         corrvalsdict = {}
@@ -353,14 +411,14 @@ def tfLoop(previousMag, previousPhase, continueFlag):
     output_tag = os.environ.get('SYNTH_TAG', 'ImageSynthesis')
     seed_manifest = os.environ.get(
         'SEED_MANIFEST',
-        os.path.join(current_dir, 'ImageSynthesis/seed_manifests/r2q1_structured_seed_16.txt')
+        os.path.join(asset_dir, 'structured_seed_16.txt')
     )
     if seed_mode not in ['noise', 'structured']:
         raise ValueError(f"Unsupported seed_mode: {seed_mode}")
     smoke = os.environ.get('SMOKE_TEST', '0') == '1'
 
     if version == 'GradOrth':
-        CORRMAT = np.load('{}/utils/{}corr_GradOrth.npy'.format(current_dir, numImages))
+        CORRMAT = np.load(os.path.join(asset_dir, '{}corr_GradOrth.npy'.format(numImages)))
     else:
         raise Exception
 
@@ -401,13 +459,30 @@ def tfLoop(previousMag, previousPhase, continueFlag):
         multipliers = tf.add(multipliers, thisOne)
         return multipliers, (numOfthisOne + 1)
 
+    def _stable_pearson(thisLayer, otherLayer, dim):
+        """数值稳健版 Pearson 相关系数。
+
+        原写法用 sqrt((dim*sum(x^2) - (sum x)^2) * (...y...)) 作分母。判别式数学上恒 >= 0,
+        但在 float32 下它是两个近似相等的大数相减, 会灾难性抵消: 实测当 16 个取值高度接近时,
+        约 14% 的情形判别式会落到 0 的负侧(误差约 1 ulp), sqrt(负数) 即 NaN; 方差恰为 0 时
+        则是 0/0。此处只在这两种本来就必然产生 NaN 的退化情形返回 0, 其余情况与原式逐位相同,
+        不引入 epsilon, 因此不影响任何健康运行已有的结果。
+
+        必须用 double-where 写法(先把 sqrt 和除法的输入换成安全值, 再选分支): tf.where 会对
+        两个分支都求导, 若直接对退化值做 sqrt/除法, NaN 梯度仍会从未选中的分支漏回来。
+        """
+        sum_x = tf.reduce_sum(thisLayer)
+        sum_y = tf.reduce_sum(otherLayer)
+        numerator = (dim * tf.reduce_sum(tf.multiply(thisLayer, otherLayer))) - (sum_x * sum_y)
+        disc_x = dim * tf.reduce_sum(tf.square(thisLayer)) - tf.square(sum_x)
+        disc_y = dim * tf.reduce_sum(tf.square(otherLayer)) - tf.square(sum_y)
+        disc = tf.maximum(disc_x, 0.0) * tf.maximum(disc_y, 0.0)
+        ok = disc > 0.0
+        denominator = tf.sqrt(tf.where(ok, disc, tf.ones_like(disc)))
+        return tf.where(ok, numerator / denominator, tf.zeros_like(numerator))
+
     def TFCorr(thisLayer, otherLayer, multiplier, currLayer, cell, i, loss, numOfthisLoss):
-        numerator = (dim *
-                     tf.reduce_sum(tf.multiply(thisLayer, otherLayer))) - (tf.reduce_sum(thisLayer) *
-                                                                           tf.reduce_sum(otherLayer))
-        denominator = tf.sqrt((dim * tf.reduce_sum(tf.square(thisLayer)) - tf.square(tf.reduce_sum(thisLayer))) *
-                              (dim * tf.reduce_sum(tf.square(otherLayer)) - tf.square(tf.reduce_sum(otherLayer))))
-        thisCorr = tf.truediv(numerator, denominator)
+        thisCorr = _stable_pearson(thisLayer, otherLayer, dim)
         thisLoss = tf.square(thisCorr - multiplier[currLayer, cell, i])
         loss = tf.add(loss, thisLoss)
         return loss, (numOfthisLoss + 1), thisCorr
@@ -418,13 +493,7 @@ def tfLoop(previousMag, previousPhase, continueFlag):
 
     def ListCorrSquare(thisLayer, otherLayer):
         dim = len(thisLayer)
-        numerator = (dim *
-                     tf.reduce_sum(tf.multiply(thisLayer, otherLayer))) - (tf.reduce_sum(thisLayer) *
-                                                                           tf.reduce_sum(otherLayer))
-        denominator = tf.sqrt((dim * tf.reduce_sum(tf.square(thisLayer)) - tf.square(tf.reduce_sum(thisLayer))) *
-                              (dim * tf.reduce_sum(tf.square(otherLayer)) - tf.square(tf.reduce_sum(otherLayer))))
-        thisCorr = tf.truediv(numerator, denominator)
-        return tf.square(thisCorr)
+        return tf.square(_stable_pearson(thisLayer, otherLayer, dim))
 
     def calImageRDMlayerCorrelation(currImageRDM):
         corrSum = []
@@ -477,12 +546,16 @@ def tfLoop(previousMag, previousPhase, continueFlag):
         v2_u = unit_vector(v2)
         return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)) / math.pi * 180
 
-    def compare(a, b):
+    def compare(a, b, currIter=None, pairn=None):
         a = a.flatten()
         b = b.flatten()
-        print("{} is {} long\n{} is {} long. \n angle is {}".format('a', np.linalg.norm(a), 'b', np.linalg.norm(b),
-                                                                    angle_between(a, b)))
-        return (np.linalg.norm(a) / np.linalg.norm(b))
+        na, nb = np.linalg.norm(a), np.linalg.norm(b)
+        # 带上 iter/pairn: 原来 16 张图每轮各打印一次这三行且互相无法区分,
+        # 出现异常时无法判断是哪一轮的哪张图触发的。
+        if VERBOSE_PER_IMAGE:
+            print("iter={} pairn={} | a is {} long | b is {} long | angle is {}".format(
+                currIter, pairn, na, nb, angle_between(a, b)))
+        return (na / nb) if nb != 0 else float('nan')
 
     def plot_vector(m, t):
         import matplotlib.pyplot as plt
@@ -622,6 +695,12 @@ def tfLoop(previousMag, previousPhase, continueFlag):
 
             corrSum = reduce(tf.add, calImageRDMlayerCorrelation(
                 currImageRDM))
+            # 退化监控张量: 每层 RDM 行(当前图与全部 16 张图在该层的相关)的判别式。
+            # 它趋于 0 就意味着该行趋于常数, 相关系数分母趋 0。只读, 不参与梯度。
+            rdmRowDisc = tf.stack([
+                (numImages * tf.reduce_sum(tf.square(currImageRDM[L * numImages:(L + 1) * numImages]))
+                 - tf.square(tf.reduce_sum(currImageRDM[L * numImages:(L + 1) * numImages])))
+                for L in range(12)])
             Loss = tf.reduce_sum(loss)
             thisWeight = reduce(tf.add, _weights)
 
@@ -662,29 +741,80 @@ def tfLoop(previousMag, previousPhase, continueFlag):
 
                 if smoke:
                     iters = min(iters, 1)
+                _iterTimes = []
+                _stageStart = time.time()
+                # 分段计时: 每轮实际有 64 次 sess.run(16 主梯度 + 16 PADDED 前向 +
+                # 32 次 lap_norm_func), 加上 numpy 侧的 Adam。要判断该往哪优化,
+                # 必须先知道 26s 到底花在哪一段, 否则就是瞎猜。
+                _PROF = {}
+                _profIters = 0
                 for currIter in range(iters):
                     if currIter in [250, 300, 350, 400, 450, 500, 550]:
                         if decay_flag:
                             AdamOpt1._lr = AdamOpt1._lr / 2
                             AdamOpt2._lr = AdamOpt2._lr / 2
-                    print('{} images, size={}/{}, phase={}/{}, {}%, iter time={}s'.format(numImages, mag + 1,
-                                                                                          mags, phase + 1, len(phases),
-                                                                                          np.around(((
-                                                                                                             currIter + 1) / iters) * 100,
-                                                                                                    2),
-                                                                                          int(time.time() - last)))
-                    last = time.time()
+                    _now = time.time()
+                    _dt = _now - last
+                    # 第 0 轮含 cuDNN autotune / XLA 编译, 比常态慢一个量级, 不计入均值
+                    if currIter > 0:
+                        _iterTimes.append(_dt)
+                    _avg = _typical(_iterTimes[-20:])
+                    _stageLeft = (iters - currIter) * _avg
+                    _doneIters = sum(ITERS_BY_MAG.get(_m, 0) for _m in range(mag)) + currIter
+                    # 后续 mag 阶段每轮更慢。优先用已完成阶段的实测比值外推; 还没有两个已完成
+                    # 阶段可比时, 退回"计算量∝面积(magby^2=1.96)"。该假设已由四月那次运行的
+                    # checkpoint 时间戳验证: mag0=36.0 s/iter, mag2=145.1(两阶段共4.03倍,
+                    # 即每阶段2.01), mag3=300.9(对mag2为2.07), 与1.96高度吻合。
+                    # (注意别用目录 mtime 反推速率: 阶段完成后还会重写目录内文件, mtime 会偏晚。)
+                    _done = sorted(STAGE_AVG)
+                    if len(_done) >= 2:
+                        _ratio = STAGE_AVG[_done[-1]] / STAGE_AVG[_done[-2]]
+                        _basis = '实测比值{:.2f}'.format(_ratio)
+                    else:
+                        _ratio = magby ** 2
+                        _basis = '面积假设{:.2f}未验证'.format(_ratio)
+                    _future, _rate = 0.0, _avg
+                    for _m in range(mag + 1, len(ITERS_BY_MAG)):
+                        _rate = _rate * _ratio
+                        _future += ITERS_BY_MAG[_m] * _rate
+                    _recentL2 = _LOSS2_Container[-numImages:]
+                    _l2 = ('L2 {:.1f}~{:.1f}'.format(min(_recentL2), max(_recentL2))
+                           if _recentL2 else 'L2 -')
+                    print('{} imgs | mag {}/{} iter {}/{} ({:.1f}%) | iter {:.1f}s 常态 {} | {} '
+                          '| 本阶段剩余 {} | 已运行 {} | 全程 {}/{} | 全程还需 {} ({})'.format(
+                              numImages, mag + 1, mags, currIter + 1, iters,
+                              (currIter + 1) / iters * 100, _dt,
+                              ('{:.1f}s'.format(_avg) if _avg == _avg else '?'), _l2,
+                              _fmt_dur(_stageLeft), _fmt_dur(_now - JOB_START),
+                              _doneIters, TOTAL_ITERS, _fmt_dur(_stageLeft + _future), _basis),
+                          flush=True)
+                    _profIters += 1
+                    if _profIters >= 20 and _PROF:
+                        _tot = sum(_PROF.values())
+                        _parts = '  '.join('{}={:.2f}s/轮({:.0f}%)'.format(_k, _v / _profIters, 100.0 * _v / _tot)
+                                           for _k, _v in sorted(_PROF.items(), key=lambda kv: -kv[1]))
+                        print('[PROFILE] 近{}轮 已归因{:.2f}s/轮(占实测{:.0f}%) | {}'.format(
+                            _profIters, _tot / _profIters,
+                            (100.0 * _tot / _profIters / _avg) if _avg == _avg and _avg else float('nan'),
+                            _parts), flush=True)
+                        _PROF.clear()
+                        _profIters = 0
+                    last = _now
+                    _p0 = time.time()
                     cropped, xx, yy = gen_crops(ims, fovparams, fshape)
+                    _PROF['crop'] = _PROF.get('crop', 0.0) + (time.time() - _p0)
                     ActualCorrelation = np.zeros(CORRMAT.shape) if phase == 0 and currIter == 0 else ActualCorrelation
                     for pairn, (thiscrop, pairmate) in enumerate(zip(cropped, ims)):
                         if smoke and pairn > 0:
                             continue
                         if pairn == 0 and phase == 0:
+                            _p0 = time.time()
                             for anum, thisone in enumerate(cropped):
                                 thisact = sess.run(matchActivations, feed_dict={t_input: thisone})
                                 padthisact = pad_activ(thisact, shapes)
                                 PADDED = np.expand_dims(padthisact, 0) if anum == 0 else np.concatenate(
                                     (PADDED, np.expand_dims(padthisact, 0)))
+                            _PROF['padded_fwd'] = _PROF.get('padded_fwd', 0.0) + (time.time() - _p0)
 
                         assert PADDED.shape[0] == len(cropped)
                         if func == 'Grad3':
@@ -693,10 +823,11 @@ def tfLoop(previousMag, previousPhase, continueFlag):
                         else:
                             g = np.zeros_like(ims[0])
 
+                        _p0 = time.time()
                         if func == 'Grad3':
-                            grad1, grad2, _LOSS1_, _LOSS2_, this, _thisWeight, _Loss, _currImageRDM = sess.run(
+                            grad1, grad2, _LOSS1_, _LOSS2_, this, _thisWeight, _Loss, _currImageRDM, _rdmDisc = sess.run(
                                 [dGrad, CorrGrad, thisWeight, corrSum, matchActivations, thisWeight, Loss,
-                                 currImageRDM],
+                                 currImageRDM, rdmRowDisc],
                                 feed_dict={t_input: thiscrop, cutAt: shapes, toMatch: PADDED, cell: pairn,
                                            chans: theseChans, multiplier: CORRMAT})
 
@@ -720,9 +851,21 @@ def tfLoop(previousMag, previousPhase, continueFlag):
 
                         else:
                             raise Exception
+                        _PROF['sessrun_grad'] = _PROF.get('sessrun_grad', 0.0) + (time.time() - _p0)
                         if func == 'Grad3':
-                            print('_LOSS2_', _LOSS2_)
+                            if VERBOSE_PER_IMAGE:
+                                print('_LOSS2_', _LOSS2_)
                             _LOSS2_Container.append(_LOSS2_)
+                            _worstDisc = float(np.min(_rdmDisc))
+                            if _worstDisc < DEGENERACY_WARN:
+                                print('[DEGENERACY] mag={} iter={} pairn={} layer={} min_rdm_disc={:.3e}'.format(
+                                    mag, currIter, pairn, int(np.argmin(_rdmDisc)), _worstDisc), flush=True)
+                            if not np.isfinite(_LOSS2_):
+                                # 加了数值防护后这里不该再出现非有限值; 真出现说明还有别的来源,
+                                # 立刻中止, 而不是继续跑几小时往图里写废数据。
+                                raise RuntimeError(
+                                    'corrSum={} 非有限值 (mag={} iter={} pairn={} min_rdm_disc={:.3e})'.format(
+                                        _LOSS2_, mag, currIter, pairn, _worstDisc))
                         _thisWeightContainer.append(_thisWeight)
                         _LossContainer.append(_Loss)
 
@@ -736,12 +879,16 @@ def tfLoop(previousMag, previousPhase, continueFlag):
                         if func == 'Grad3':
                             g1[xx:xx + fshape[1], yy:yy + fshape[1]] = grad1
                             g2[xx:xx + fshape[1], yy:yy + fshape[1]] = grad2
+                            _p0 = time.time()
                             g1 = g1 / g1.std() + 1e-8 if not lapnorm else lap_norm_func(g1)
                             g2 = g2 / g2.std() + 1e-8 if not lapnorm else lap_norm_func(g2)
+                            _p1 = time.time()
+                            _PROF['lapnorm'] = _PROF.get('lapnorm', 0.0) + (_p1 - _p0)
                             g1 = AdamOpt1.update(g1, currIter, pairn)
                             g2 = AdamOpt2.update(g2, currIter, pairn)
+                            _PROF['adam'] = _PROF.get('adam', 0.0) + (time.time() - _p1)
 
-                            compareg1g2List.append(compare(g1, g2))
+                            compareg1g2List.append(compare(g1, g2, currIter=currIter, pairn=pairn))
 
                             def getIDrange(start_num):
                                 IDList = []
@@ -759,6 +906,30 @@ def tfLoop(previousMag, previousPhase, continueFlag):
                                 compareg1g2 = np.mean(compareg1g2List[(i - i % 50):i + 1])
                             g2 = breaklink(g2 * compareg1g2)
                             ims[pairn] = ims[pairn] - g1 - g2
+
+                            # 始终生效的 NaN 哨兵(不受 SYNTH_VERBOSE 影响)。
+                            # corrSum 那条检查挡不住这条路径: compareg1g2 来自 compare() 里的
+                            # 范数相除, 分母为 0 时为 nan, 乘进 g2 就让整张图变 nan, 而它只在
+                            # 前 10 轮计算一次之后就冻结, 一旦取到 nan 会静默毁掉后面全部迭代。
+                            # 用 .sum() 做哨兵: 单次遍历、无额外分配, 相对 26s/轮 可忽略。
+                            _nanSrc = []
+                            if not np.isfinite(_LOSS2_):
+                                _nanSrc.append('corrSum={}'.format(_LOSS2_))
+                            if not np.isfinite(compareg1g2):
+                                _nanSrc.append('compareg1g2={}'.format(compareg1g2))
+                            if not np.isfinite(np.asarray(g1).sum()):
+                                _nanSrc.append('g1(dGrad侧)')
+                            if not np.isfinite(np.asarray(g2).sum()):
+                                _nanSrc.append('g2(CorrGrad侧)')
+                            if not np.isfinite(np.asarray(ims[pairn]).sum()):
+                                _nanSrc.append('ims[{}]'.format(pairn))
+                            if _nanSrc:
+                                raise RuntimeError(
+                                    '[NAN] mag={} iter={} pairn={} 非有限值来源: {} | '
+                                    'min_rdm_disc={:.3e} | 立即中止, 不继续污染后续迭代。'
+                                    '复现用: SYNTH_SEED={} SEED_MODE={} SYNTH_TAG={}'.format(
+                                        mag, currIter, pairn, ', '.join(_nanSrc),
+                                        float(np.min(_rdmDisc)), SYNTH_SEED, seed_mode, tag))
 
                         else:
                             g[xx:xx + fshape[1], yy:yy + fshape[1]] = grad
@@ -824,6 +995,12 @@ def tfLoop(previousMag, previousPhase, continueFlag):
     with open(f"{run_root}/seed_metadata.json", 'w') as f:
         json.dump(seed_metadata, f, indent=2)
     total_end = time.time()
+    _stageAvg = _typical(_iterTimes)
+    if _stageAvg == _stageAvg:
+        STAGE_AVG[mag] = _stageAvg
+    print('[STAGE DONE] mag={} iters={} 本阶段耗时={} 常态={:.1f}s/iter 累计已运行={}'.format(
+        mag, iters, _fmt_dur(total_end - _stageStart), _stageAvg,
+        _fmt_dur(total_end - JOB_START)), flush=True)
     print('in total %.02f' % ((total_end - total_start) / 60 / 60), 'h has passed')
     print('tag={}\n'.format(tag))
     previousMag = mag
@@ -837,7 +1014,20 @@ mags = 1 if os.environ.get('SMOKE_TEST', '0') == '1' else 5
 previousPhase = 0
 continueFlag = False
 
-for mag in tqdm(range(0, mags)):
+# 断点续跑: 每个 mag 阶段本来就是从磁盘读上一阶段的 mag{N-1}phase0/ims.pkl 开始的,
+# 所以只要让循环从指定阶段起步即可续上; 又因为 Adam 优化器本来就每阶段重建,
+# 在 mag 边界续跑不丢任何优化器状态。作业被时限杀掉后, 用 START_MAG 指定重启点。
+# 注意: 固定 SYNTH_SEED 后, 续跑会从头重放随机序列, 所以裁剪抖动与不间断跑不完全一致,
+# 是另一条同样合法的轨迹, 但不是逐位复现。
+START_MAG = int(os.environ.get('START_MAG', '0'))
+if START_MAG > 0:
+    _need = '{}/images/{}/mag{}phase{}/ims.pkl'.format(current_dir, tag, START_MAG - 1, previousPhase)
+    assert os.path.exists(_need), (
+        'START_MAG={} 需要上一阶段的图像状态, 但找不到 {}。'
+        '请确认该阶段确实跑完了(完成的阶段目录里应同时有 ims.pkl 和 16 张 imNof16.png)。'.format(START_MAG, _need))
+    print('[RESUME] 从 mag{} 续跑, 读取 {}'.format(START_MAG, _need), flush=True)
+
+for mag in tqdm(range(START_MAG, mags)):
     if continueFlag:
         previousMag = mag
     else:

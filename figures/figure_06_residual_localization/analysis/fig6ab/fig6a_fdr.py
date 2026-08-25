@@ -3,20 +3,20 @@
 # (`_nsd_residual_meanacross_tstat_and_mask`：回归掉共享跨层方差后剩下的层特异表征)。
 #
 # vmax=14 是从 fig4a_fdr.py 沿用的起始值，不是残差模型自己的实测结果——残差模型把共享方差
-# 回归掉后 t 的量级可能和非残差差很多，正式出图前务必先跑 fig6ab/diag_fig6_vmax.py 核实
+# 残差 t 图使用独立于非残差分析的显示范围。
 # t 的 max/p99 落在哪个区间，vmax 明显不对就按诊断结果改这里的值再出图。
 #
 # 三种跑法(同 fig4a_fdr.py)：
-#   串行全跑(慢)：           python3 fig6ab/fig6a_fdr.py
+#   串行全跑(慢)：           python3 figures/figure_06_residual_localization/analysis/fig6ab/fig6a_fdr.py
 #   并行 render + 装配：
-#       sbatch fig6ab/fig6a_fdr_array.sh          # 每个任务 --layer $SLURM_ARRAY_TASK_ID
-#       python3 fig6ab/fig6a_fdr.py --assemble    # 12 张 PNG 都在了，读缓存拼图(秒级)
+#       sbatch figures/figure_06_residual_localization/analysis/fig6ab/fig6a_fdr_array.sh          # 每个任务 --layer $SLURM_ARRAY_TASK_ID
+#       python3 figures/figure_06_residual_localization/analysis/fig6ab/fig6a_fdr.py --assemble    # 12 张 PNG 都在了，读缓存拼图(秒级)
 #
 # 任何输入文件缺失都会在 display_surface_plot 的 [门禁 FDR] 带路径直接 raise，不静默出错图。
 import sys
 import argparse
 
-sys.path.append("display_surface_plot")
+sys.path.append("figures/figure_06_residual_localization/analysis/display_surface_plot")
 from display_surface_plot import plot_surface_saveImageReload_pdf, designCmap
 
 
@@ -28,7 +28,7 @@ def main():
     ap.add_argument("--assemble", action="store_true",
                     help="装配阶段：读所有已缓存的层 PNG 拼成最终图，不重渲染")
     ap.add_argument("--vmax", type=float, default=14,
-                    help="色标上界；正式出图前先用 diag_fig6_vmax.py 核实这个值(默认沿用 fig4 的 14)")
+                    help="色标上界")
     args = ap.parse_args()
 
     # 纯 inferno(不用 designCmap 的白下半段)+ displayThreshold=0.01：niiData=sig×t 已是 FDR 阈过的，
@@ -42,7 +42,7 @@ def main():
         figureName="nsd_residual_FDR",
         displayThreshold=0.01,
         bgDarkness=0.3,
-        copyTo="rebuttal/BZ/paper_figures/fig6A_nsd_residual_FDR_posterior.pdf",
+        copyTo="figures/components/fig6A_nsd_residual_FDR_posterior.pdf",
     )
 
     if args.assemble:

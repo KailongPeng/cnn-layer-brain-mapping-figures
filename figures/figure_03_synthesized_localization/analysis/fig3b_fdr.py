@@ -12,7 +12,7 @@
 # 任何输入文件缺失都会在 display_surface_plot 的 [门禁 FDR] 带路径直接 raise，不静默出错图。
 import sys
 
-sys.path.append("display_surface_plot")
+sys.path.append("figures/figure_03_synthesized_localization/analysis/display_surface_plot")
 from display_surface_plot import plotMaximalLayer_pdf, designCmap
 
 # 和 TFCE 版 fig3b() 一样的 12 色 rainbow 色标，保证除"校正方法"外观感一致、可直接对比。
@@ -23,5 +23,5 @@ plotMaximalLayer_pdf(resultType="synthesized: maximally fit layer FDR",
                      # 背景调浅到 0.3，与 panel A(fig3a_fdr)一致的浅背景。
                      bgDarkness=0.3,
                      # 存 scratch 后自动同步到仓库 git 跟踪位置。
-                     copyTo="rebuttal/BZ/paper_figures/fig3B_synthesized_FDR_3view.pdf")
+                     copyTo="figures/components/fig3B_synthesized_FDR_3view.pdf")
 print("done")

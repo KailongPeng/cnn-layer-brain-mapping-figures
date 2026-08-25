@@ -5,9 +5,12 @@ import re
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), \
+    f"Run from the localize_paper or cnn-layer-brain-mapping-figures repository root, not {current_dir}"
 
 print(f"Current directory is: {current_dir}")
+
+asset_dir = os.path.join(current_dir, 'figures', 'figure_01_image_synthesis', 'assets')
 
 import sys
 import os, pdb
@@ -373,7 +376,7 @@ def png2RDM(pngPathOrIms,
                                                                     angle_between(a, b)))
         return (np.linalg.norm(a) / np.linalg.norm(b))
 
-    model_fn = f'utils/tensorflow_inception_graph.pb'
+    model_fn = os.path.join(asset_dir, 'tensorflow_inception_graph.pb')
 
     PNGimage = pngPathOrIms
 
@@ -400,8 +403,8 @@ def png2RDM(pngPathOrIms,
         _thisWeightContainer = []
         _LossContainer = []
 
-        bestchansfile = '{}/utils/bestchans{}.pkl'.format(main_dir, numImages)
-        corrsvalsfile = '{}/utils/corrsvals{}.pkl'.format(main_dir, numImages)
+        bestchansfile = os.path.join(asset_dir, 'bestchans{}.pkl'.format(numImages))
+        corrsvalsfile = os.path.join(asset_dir, 'corrsvals{}.pkl'.format(numImages))
 
         bestchandict = load_obj(bestchansfile.split('.pkl')[0])
         corrvalsdict = load_obj(corrsvalsfile.split('.pkl')[0])
@@ -430,10 +433,10 @@ def png2RDM(pngPathOrIms,
         version = 'GradOrth'
 
         if version == 'orth':
-            CORRMAT = np.load('{}/utils/{}corr.npy'.format(main_dir, numImages))
+            CORRMAT = np.load(os.path.join(asset_dir, '{}corr.npy'.format(numImages)))
             CORRMAT = np.swapaxes(CORRMAT, 0, 2)
         elif version == 'GradOrth':
-            CORRMAT = np.load('{}/utils/{}corr_GradOrth.npy'.format(main_dir, numImages))
+            CORRMAT = np.load(os.path.join(asset_dir, '{}corr_GradOrth.npy'.format(numImages)))
         else:
             pass
 
@@ -560,9 +563,6 @@ print(f"jobarrayID={jobarrayID}")
 
 sys.path.append(current_dir)
 
-from utils import cfg_loading
-
-
 def save_obj(obj, name):
     with open(name + '.pkl', 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
@@ -573,9 +573,9 @@ def load_obj(name):
         return pickle.load(f)
 
 
-cfg = cfg_loading(f'NSD_similarity/hyperparameters.toml')
-[NSDimageDict, selected5000setIDs] = load_obj(f"NSDPhotoSelection_{cfg.iterationNumber}")
-if jobarrayID == 1 + cfg.iterationNumber:
+iterationNumber = 5000
+[NSDimageDict, selected5000setIDs] = load_obj(f"NSDPhotoSelection_{iterationNumber}")
+if jobarrayID == 1 + iterationNumber:
     synthesizedImages = f"images/final"
     print("loading synthesized images")
     Ims = loadPng2ims(synthesizedImages)

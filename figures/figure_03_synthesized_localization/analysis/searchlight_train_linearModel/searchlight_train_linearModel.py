@@ -29,11 +29,12 @@ print(f"pandas version = {pd.__version__}")
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), f"The directory {current_dir} does not end with 'localize_paper'"
 
 print(f"Current directory is: {current_dir}")
 
 sys.path.append(current_dir)
+sys.path.append(os.path.join(current_dir, "figures/figure_03_synthesized_localization/analysis"))
 
 from utils import load_obj, save_obj, custom_run, waitForEnd, getjobID_num, check_jobArray
 
@@ -57,11 +58,11 @@ def sl(testMode=False, subs=[]):
                 for layer in range(1, 1 + 12):
                     jobarrayDict[jobarrayID] = [sub, radius, method, layer, shuffleNormCorrelationSquare_flag]
                     jobarrayID += 1
-    np.save(f"fig3a/searchlight_train_linearModel/sl_jobArray.npy", jobarrayDict)
+    np.save(f"figures/figure_03_synthesized_localization/analysis/searchlight_train_linearModel/sl_jobArray.npy", jobarrayDict)
     if testMode:
-        cmd = f"sbatch --requeue --array=1-1 fig3a/searchlight_train_linearModel/sl.sh"
+        cmd = f"sbatch --requeue --array=1-1 figures/figure_03_synthesized_localization/analysis/searchlight_train_linearModel/sl.sh"
     else:
-        cmd = f"sbatch --requeue --array=1-{len(jobarrayDict)} fig3a/searchlight_train_linearModel/sl.sh"
+        cmd = f"sbatch --requeue --array=1-{len(jobarrayDict)} figures/figure_03_synthesized_localization/analysis/searchlight_train_linearModel/sl.sh"
     sbatch_response = custom_run(cmd)
     jobID = getjobID_num(sbatch_response)
     waitForEnd(jobID)

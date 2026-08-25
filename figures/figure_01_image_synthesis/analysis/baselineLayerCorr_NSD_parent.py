@@ -2,7 +2,8 @@ import os
 
 current_dir = os.getcwd()
 
-assert current_dir.endswith('localize_paper'), f"The directory {current_dir} does not end with 'localize_paper'"
+assert current_dir.endswith(('localize_paper', 'cnn-layer-brain-mapping-figures')), \
+    f"Run from the localize_paper or cnn-layer-brain-mapping-figures repository root, not {current_dir}"
 
 print(f"Current directory is: {current_dir}")
 
@@ -32,8 +33,6 @@ from utils import custom_and
 [subjectDir, scratchResultFolder] = setupPaths()
 print(f"subjectDir={subjectDir}")
 print(f"scratchResultFolder={scratchResultFolder}")
-
-from utils import cfg_loading
 
 os.chdir(projectDir)
 workingDir = projectDir
@@ -171,7 +170,10 @@ randomSelectNSDPhotos(workingDir, iterationNumber=iterationNumber)
 
 
 jobarrayNumber = iterationNumber
-cmd = f"sbatch --requeue --array=1-{jobarrayNumber + 1} NSD_similarity/baseline.sh"
+cmd = (
+    f"sbatch --requeue --array=1-{jobarrayNumber + 1} "
+    "figures/figure_01_image_synthesis/analysis/baseline.sh"
+)
 
 sbatch_response = custom_run(cmd)
 jobID = getjobID_num(sbatch_response)
