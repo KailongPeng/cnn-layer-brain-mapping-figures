@@ -29,3 +29,7 @@ run entry points from the repository root.
 
 Supplementary figures are not part of this release yet. Local provenance and
 migration notes are stored in ignored `_private/` directories.
+
+## License
+
+The code in this repository is released under the [MIT License](LICENSE).
