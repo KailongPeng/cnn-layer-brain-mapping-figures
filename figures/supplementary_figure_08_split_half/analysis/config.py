@@ -1,0 +1,306 @@
+"""
+Configuration file for rebuttal analyses.
+All paths and parameters centralized here for easy modification.
+"""
+import os
+import numpy as np
+
+# ============================================================
+# Paths (Yale Milgram HPC)
+# ============================================================
+SUBJECT_DIR = "/gpfs/milgram/project/turk-browne/projects/localize_paper/subjects/"
+SCRATCH_RESULT     = "/gpfs/milgram/scratch60/turk-browne/kp578/localize/result/"
+# localize_bkp holds the main pipeline outputs (searchlight scores, randomise)
+SCRATCH_RESULT_BKP = "/gpfs/milgram/scratch60/turk-browne/kp578/localize_bkp/result/"
+# Dated snapshot taken 2026-07-22, used as a further fallback when scratch60
+# cleanup has emptied both SCRATCH_RESULT and SCRATCH_RESULT_BKP for a given file.
+SCRATCH_RESULT_BKP_0722 = "/gpfs/milgram/scratch60/turk-browne/kp578/localize_bkp_07222026/result/"
+
+# NSD source data (in project directory, not scratch60)
+NSD_DATA_DIR = "/gpfs/milgram/project/turk-browne/projects/localize/analysis/organizedScripts/nsd/"
+
+# Output directory for rebuttal analyses
+REBUTTAL_OUTPUT = os.path.join(SCRATCH_RESULT, "rebuttal_analyses")
+
+# ============================================================
+# Subjects
+# ============================================================
+SYNTHESIZED_SUBS = [
+    'sub001', 'sub002', 'sub003', 'sub004', 'sub005', 'sub007', 'sub008',
+    'sub009', 'sub010', 'sub011', 'sub012', 'sub013', 'sub014', 'sub015',
+    'sub016', 'sub017', 'sub019', 'sub020', 'sub021', 'sub022', 'sub023',
+    'sub024', 'sub025', 'sub027', 'sub028', 'sub029', 'sub030', 'sub031',
+    'sub032', 'sub033'
+]  # 30 subjects (excluding sub006, sub018, sub026)
+
+NSD_SUBS = [f"sub_i{i}" for i in range(1, 9)]  # 8 NSD subjects
+
+# ============================================================
+# Experiment Parameters
+# ============================================================
+N_IMAGES = 16               # Number of synthesized images
+N_LAYERS = 12               # Number of CNN layers
+N_RSM_ELEMENTS = 120        # Upper triangle of 16x16 RSM: 16*15/2
+N_RUNS = 8                  # Number of fMRI runs for synthesized images
+SEARCHLIGHT_RADIUS = 3      # Searchlight radius in voxels
+BRAIN_SHAPE = (91, 109, 91) # MNI 2mm brain volume shape
+N_PERMUTATIONS_SUBJECT = 500   # Permutations per subject
+N_PERMUTATIONS_GROUP = 5000    # Group-level permutations (FSL randomise)
+N_NSD_SETS = 16             # Number of NSD image sets
+
+# Standard MNI 2mm affine matrix
+AFFINE_MAT = np.array([
+    [-2.0, 0.0, 0.0, 90.0],
+    [0.0, 2.0, 0.0, -126.0],
+    [0.0, 0.0, 2.0, -72.0],
+    [0.0, 0.0, 0.0, 1.0]
+])
+
+# ============================================================
+# Data Paths (Synthesized Images)
+# ============================================================
+def get_cope_path(subject, cope_num):
+    """Path to a single cope file for synthesized images."""
+    return os.path.join(
+        SUBJECT_DIR, subject, "preprocess", "allruns.gfeat",
+        f"cope{cope_num}.feat", "stats", "cope1.nii.gz"
+    )
+
+def get_brain_mask_path(subject):
+    """Path to brain mask for synthesized images."""
+    return os.path.join(
+        SUBJECT_DIR, subject, "preprocess", "allruns.gfeat", "mask.nii.gz"
+    )
+
+def get_features_path():
+    """Path to pre-computed CNN layer features (RSMs)."""
+    return os.path.join(SUBJECT_DIR, "..", "data", "inception", "features.npy")
+
+# ============================================================
+# Data Paths (Existing Results)
+# ============================================================
+def get_all_R2_path(subject, layer, method='reg', radius=3):
+    """Path to precomputed R² array (true + 500 shuffled).
+    Same localize_bkp base as get_zscored_path.
+    """
+    return os.path.join(
+        SCRATCH_RESULT_BKP,
+        "findLayerInBrain_leaveOneSubOutReg",
+        "searchlight_score_linearModel", "searchlight",
+        subject, f"rad{radius}",
+        f"{subject}_layer{layer}_{method}_all_R2.npy"
+    )
+
+def get_zscored_path(subject, layer, method='reg', radius=3):
+    """Path to per-subject shuffle-normalized z-scored R² NIfTI.
+    Actual location confirmed: localize_bkp/result/.../searchlight_score_linearModel/
+    scratch60 cleanup can also empty that location; try the 07-22 dated
+    snapshot next, then fall back to the original _bkp path (unchanged
+    behavior when neither fallback is needed).
+    """
+    rel = os.path.join(
+        "findLayerInBrain_leaveOneSubOutReg",
+        "searchlight_score_linearModel", "searchlight",
+        subject, f"rad{radius}",
+        f"zscored_R2_{subject}_layer{layer}_{method}.nii.gz"
+    )
+    for base in (SCRATCH_RESULT_BKP, SCRATCH_RESULT_BKP_0722):
+        p = os.path.join(base, rel)
+        if os.path.exists(p):
+            return p
+    return os.path.join(SCRATCH_RESULT_BKP, rel)
+
+def get_tfce_mask_path(layer, method='reg', radius=3):
+    """Path to TFCE-corrected p-value map for the layer encoding analysis.
+    Generated by fig3a/shuffleNorm/Randomise.sh:
+      outPre = saveToFolder + '/_'
+      randomise -i ... -o outPre -1 -n 5000 -T
+    FSL appends '_tfce_corrp_tstat1.nii.gz' → double-underscore prefix '__'.
+    Base: localize_bkp preferred, but scratch60 purge can leave the masks only
+    under localize/result or the 07-22 dated snapshot; try all three roots
+    and return whichever exists.
+    """
+    rel = os.path.join(
+        "findLayerInBrain_leaveOneSubOutReg",
+        "shuffleNorm", "randomise",
+        f"layer{layer}", method, f"rad{radius}",
+        "__tfce_corrp_tstat1.nii.gz",
+    )
+    for base in (SCRATCH_RESULT_BKP, SCRATCH_RESULT, SCRATCH_RESULT_BKP_0722):
+        p = os.path.join(base, rel)
+        if os.path.exists(p):
+            return p
+    # none present → return the original _bkp path so the caller's
+    # existence check still triggers the documented z-threshold fallback
+    return os.path.join(SCRATCH_RESULT_BKP, rel)
+
+def get_rep_stability_mask_path(subject=None, radius=3):
+    """Path to representational stability mask."""
+    if subject:
+        return os.path.join(
+            SUBJECT_DIR, subject,
+            f"repStability_RSA_sl", f"rad{radius}",
+            f"{subject}_repStability_RSA_sl.nii.gz"
+        )
+    else:
+        # Group-level mask
+        return os.path.join(
+            SCRATCH_RESULT,
+            "findLayerInBrain_leaveOneSubOutReg",
+            "shuffleNorm", "randomise",
+            "repStability_mask.nii.gz"
+        )
+
+def get_coef_path(subject, layer, method='reg', radius=3):
+    """Path to trained regression coefficient."""
+    return os.path.join(
+        SCRATCH_RESULT,
+        "findLayerInBrain_leaveOneSubOutReg",
+        "searchlight_train_linearModel", "searchlight",
+        subject, f"rad{radius}",
+        f"{subject}_layer{layer}_{method}_coef.nii.gz"
+    )
+
+def get_intercept_path(subject, layer, method='reg', radius=3):
+    """Path to trained regression intercept."""
+    return os.path.join(
+        SCRATCH_RESULT,
+        "findLayerInBrain_leaveOneSubOutReg",
+        "searchlight_train_linearModel", "searchlight",
+        subject, f"rad{radius}",
+        f"{subject}_layer{layer}_{method}_intercept.nii.gz"
+    )
+
+# ============================================================
+# NSD Data Paths
+# ============================================================
+def get_nsd_brain_path(subject, img_id, which_set=None):
+    """Path to NSD brain data (in project directory)."""
+    return os.path.join(
+        NSD_DATA_DIR, "brainData", "data",
+        f"{subject}_imgID{img_id}_2mm.nii.gz"
+    )
+
+def get_nsd_features_path(which_set):
+    """Path to NSD CNN features (in project directory)."""
+    return os.path.join(
+        NSD_DATA_DIR, "modelData", "data",
+        f"ActualFingerprints_whichSet_{which_set}.npy"
+    )
+
+def get_nsd_all_R2_path(subject, layer, which_set, method='reg', radius=3):
+    """Path to NSD precomputed R² array (non-residual, from fig4 pipeline)."""
+    return os.path.join(
+        SCRATCH_RESULT,
+        "nsd", "findLayerInBrain_leaveOneSubOutReg",
+        "searchlight_score_linearModel",
+        subject, f"rad{radius}", f"whichSet{which_set}",
+        f"{subject}_layer{layer}_{method}_all_R2.npy"
+    )
+
+def get_nsd_zscored_path(subject, layer, which_set, method='reg', radius=3):
+    """Path to NSD non-residual z-scored R² NIfTI (what fig4 pipeline actually generates)."""
+    return os.path.join(
+        SCRATCH_RESULT,
+        "nsd", "findLayerInBrain_leaveOneSubOutReg",
+        "searchlight_score_linearModel",
+        subject, f"rad{radius}", f"whichSet{which_set}",
+        f"{subject}_layer{layer}_{method}_zscored_R2.nii.gz"
+    )
+
+def get_nsd_raw_R2_path(subject, layer, which_set, method='reg', radius=3):
+    """Path to the NSD non-residual raw cross-validated R² map."""
+    return os.path.join(
+        SCRATCH_RESULT,
+        "nsd", "findLayerInBrain_leaveOneSubOutReg",
+        "searchlight_score_linearModel",
+        subject, f"rad{radius}", f"whichSet{which_set}",
+        f"{subject}_layer{layer}_{method}_raw_R2.nii.gz"
+    )
+
+def get_nsd_residual_all_R2_path(subject, layer, which_set, method='reg', radius=3):
+    """Path to NSD residual R² array.
+    NOTE: The residual pipeline (nsd_residualModel/sl.py) only saves
+    zscored_R2.nii.gz, NOT all_R2.npy. Use get_nsd_residual_zscored_path()
+    instead, or modify sl.py to also save all_R2.npy if needed.
+    """
+    return os.path.join(
+        SCRATCH_RESULT,
+        "nsd", "residualModel",
+        "searchlight_score_linearModel",
+        subject, f"rad{radius}", f"whichSet{which_set}",
+        f"{subject}_layer{layer}_{method}_all_R2.npy"
+    )
+
+def get_nsd_residual_zscored_path(subject, layer, which_set, method='reg', radius=3):
+    """Path to NSD residual z-scored R² NIfTI (this is what the pipeline actually generates)."""
+    return os.path.join(
+        SCRATCH_RESULT,
+        "nsd", "residualModel",
+        "searchlight_score_linearModel",
+        subject, f"rad{radius}", f"whichSet{which_set}",
+        f"{subject}_layer{layer}_{method}_zscored_R2.nii.gz"
+    )
+
+
+def get_nsd_residual_raw_R2_path(subject, layer, which_set, method='reg', radius=3):
+    """Path to the NSD residual raw cross-validated R² map used in Figure S18."""
+    return os.path.join(
+        SCRATCH_RESULT,
+        "nsd", "residualModel",
+        "searchlight_score_linearModel",
+        subject, f"rad{radius}", f"whichSet{which_set}",
+        f"{subject}_layer{layer}_{method}_raw_R2.nii.gz"
+    )
+
+
+def get_corrected_perm_all_R2_path(subject, layer, radius=3):
+    """Path to corrected-permutation all_R2.npy (修正置换检验输出)."""
+    return os.path.join(
+        REBUTTAL_OUTPUT,
+        "corrected_permutation",
+        subject, f"rad{radius}",
+        f"{subject}_layer{layer}_reg_all_R2.npy"
+    )
+
+def get_noise_ceiling_path(suffix, bound='lower'):
+    """Path to noise ceiling NIfTI (analysis_01 输出).
+    bound: 'lower' or 'upper'
+    suffix: 'synthesized' or 'nsd_set{N}'
+    """
+    return os.path.join(
+        REBUTTAL_OUTPUT,
+        "noise_ceiling",
+        f"noise_ceiling_{bound}_{suffix}.nii.gz"
+    )
+
+def get_raw_R2_map_path(layer, suffix):
+    """Path to mean R² NIfTI for a single layer (analysis_02 输出)."""
+    return os.path.join(
+        REBUTTAL_OUTPUT,
+        "raw_R2_maps",
+        f"R2_raw_layer{layer}_{suffix}.nii.gz"
+    )
+
+
+# ============================================================
+# Helper functions
+# ============================================================
+def mkdir(folder):
+    os.makedirs(folder, exist_ok=True)
+
+def save_nifti(data, filename, affine=None):
+    """Save a numpy array as a NIfTI file."""
+    import nibabel as nib
+    if affine is None:
+        affine = AFFINE_MAT
+    data = data.astype('double')
+    data[np.isnan(data)] = 0
+    img = nib.Nifti1Image(data, affine)
+    nib.save(img, filename)
+    print(f"Saved: {filename}")
+
+def load_nifti(filename):
+    """Load a NIfTI file and return data array."""
+    import nibabel as nib
+    return nib.load(filename).get_fdata()

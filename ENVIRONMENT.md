@@ -26,6 +26,15 @@ Group inference and image operations call FSL command-line tools, including
 Slurm (`sbatch`, `srun`, and job arrays). Figure 2 is a schematic and has no
 standalone runtime environment.
 
+## Supplementary figures
+
+The supplementary analyses use the environments of their corresponding main
+analyses. Figures S3, S8, S9, S13, S15, and S18 use the Python analysis stack
+described above. Figures S6, S7, and S10--S17 also require the Nibabel,
+Nilearn, FSL, BrainIAK, MPI, and surface-rendering tools used by Figures 3--6.
+Figure S4 and the optimization in Figure S5 require the TensorFlow 1
+environment used for Figure 1.
+
 The scripts were developed in historical cluster environments and are not
 presented as a newly version-pinned cross-platform package. Before a full rerun,
 first execute the smallest available worker or test mode for the target figure

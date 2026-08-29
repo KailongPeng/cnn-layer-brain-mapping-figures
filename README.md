@@ -27,8 +27,14 @@ See [ENVIRONMENT.md](ENVIRONMENT.md) for the historical software environments
 and external command-line dependencies. Unless a figure README says otherwise,
 run entry points from the repository root.
 
-Supplementary figures are not part of this release yet. Local provenance and
-migration notes are stored in ignored `_private/` directories.
+Supplementary analyses are organized in `figures/supplementary_figure_01_*`
+through `figures/supplementary_figure_18_*`, following the final manuscript
+numbering. Schematic figures point to the executable analysis they explain;
+independent robustness analyses retain their own workers. Code used only to
+assemble complete manuscript PDFs is excluded.
+
+Local provenance and migration notes are stored in ignored `_private/`
+directories.
 
 ## License
 
