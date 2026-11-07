@@ -102,12 +102,35 @@ def compare_datasets(root):
     (output/'qc.json').write_text(json.dumps({'generated':True,'visually_reviewed':False,'common_voxels':int(common.sum()),'color_limit':float(vmax),'descriptive_only':True},indent=2))
 
 
+def noise_ceiling_plot(root):
+    source=root/'noise_ceiling';output=source/'plots'
+    if output.exists():raise FileExistsError(str(output))
+    if not json.loads((source/'independent_qc.json').read_text())['passed']:raise ValueError('Noise ceiling QC not passed')
+    ceiling=list(csv.DictReader((source/'roi_noise_ceiling.csv').open()))
+    models=list(csv.DictReader((root/'roi/group_roi_r.csv').open()))
+    fig,axes=plt.subplots(4,4,figsize=(15,11),constrained_layout=True)
+    for index,row in enumerate(ceiling):
+        values=sorted([r for r in models if r['roi']==row['roi']],key=lambda r:int(r['layer']))
+        ax=axes.flat[index]
+        ax.axhspan(float(row['lower_mean_r']),float(row['upper_mean_r']),color='gray',alpha=.22)
+        ax.plot(range(1,13),[float(r['mean_subject_roi_r']) for r in values],marker='o',markersize=3,color='#126ba0')
+        ax.axhline(0,color='black',linewidth=.6);ax.set_title(row['roi'])
+        ax.set_xticks([1,4,8,12]);ax.tick_params(axis='x',labelbottom=True)
+        ax.set_xlabel('Model layer');ax.set_ylabel('Mean raw Pearson r')
+    for index in range(len(ceiling),16):axes.flat[index].set_visible(False)
+    fig.suptitle('Current 16-image synthesized data: model r and brain-RSM reliability\n'
+                 'Identical full-Cube inputs and common coverage; gray band is not a confidence interval')
+    output.mkdir(parents=True,exist_ok=False);save(fig,output/'roi_model_r_and_noise_ceiling')
+    (output/'qc.json').write_text(json.dumps({'generated':True,'visually_reviewed':False,'change':'show layer tick labels on every ROI panel; no numerical recomputation'},indent=2))
+
+
 def main():
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=['splits','inference','nsd']);p.add_argument('--root',required=True)
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=['splits','inference','nsd','noise_ceiling']);p.add_argument('--root',required=True)
     args=p.parse_args();root=Path(args.root)
     if args.mode=='splits':split_plots(root)
     elif args.mode=='inference':annotated_synth(root)
-    else:compare_datasets(root)
+    elif args.mode=='nsd':compare_datasets(root)
+    else:noise_ceiling_plot(root)
 
 
 if __name__=='__main__':main()
