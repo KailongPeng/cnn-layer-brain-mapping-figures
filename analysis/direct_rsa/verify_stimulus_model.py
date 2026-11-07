@@ -42,7 +42,9 @@ def main():
     layers += [name for name in convs if 'pool_reduce' in name]
     if len(layers) != 12:
         raise ValueError('Expected 12 historical layers, got %r' % layers)
-    tensors = [graph.get_tensor_by_name('import/%s/conv:0' % name) for name in layers]
+    # Historical get_tensor reads the named pre-ReLU tensor, including bias.
+    # The nested /conv tensor omits that bias and is a different representation.
+    tensors = [graph.get_tensor_by_name('import/%s:0' % name) for name in layers]
     vectors = [[] for _ in layers]
     shapes = []
     config = tf.ConfigProto(device_count={'GPU': 0}, intra_op_parallelism_threads=4,
@@ -95,7 +97,7 @@ def main():
               'legacy_float32_max_absolute_error_per_layer': np.max(np.abs(legacy_upper-b),axis=1).tolist(),
               'pass_criterion': 'historical float32 TFCorr formula versus saved model RSM',
               'comparison': 'strict upper triangle; diagonal excluded',
-              'method': 'RGB PNG; subtract 117; full pre-ReLU convolution activation Pearson'}
+              'method': 'RGB PNG; subtract 117; named pre-ReLU activation including bias; Pearson'}
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2, allow_nan=False))
     print(json.dumps(report), flush=True)
