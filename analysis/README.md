@@ -35,3 +35,7 @@ Slurm入口使用明确的analysis环境Python，并记录输入文件路径、�
 尚未提供或运行正式全脑分析与群体显著性推断。本轮先验证旧结果能否复用和当前输入的计算链，再决定全脑任务。图片对在统计上并非独立样本，不能把120条RSM上三角当作独立样本做普通相关p值检验。
 
 旧代码在无效位置将NaN写成0，新核心保留NaN。searchlight沿用原代码的完整cube模式，不擅自换成球形、筛掉cube内体素或按新mask重定义模式。
+
+## 执行规划
+
+见[PLAN_DIRECT_PEARSON.md](PLAN_DIRECT_PEARSON.md)：BrainIAK Searchlight + MPI调用已验证Pearson核心，先单被试全脑验证，再扩展全部被试；包含0927备份路径分工与完成标准。
