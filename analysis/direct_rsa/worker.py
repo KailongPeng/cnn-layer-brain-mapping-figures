@@ -75,6 +75,7 @@ def main():
     error=comm.bcast(error,root=0)
     if error:
         raise RuntimeError(error)
+    mask=comm.bcast(mask,root=0)
     sl=Searchlight(sl_rad=int(cfg['radius']),max_blk_edge=5,shape=Cube)
     sl.distribute([data],mask)
     sl.broadcast((features,args.indices) if rank==0 else None)
