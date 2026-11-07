@@ -33,3 +33,9 @@ migration notes are stored in ignored `_private/` directories.
 ## License
 
 The code in this repository is released under the [MIT License](LICENSE).
+
+## November 2026 revision
+
+Shared direct model-brain Pearson validation and pilot entry points are documented
+in [analysis/README.md](analysis/README.md). Historical correlation results are
+being audited before reuse; the submitted figure methods remain in figures/.

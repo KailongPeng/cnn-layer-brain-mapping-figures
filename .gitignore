@@ -22,3 +22,7 @@ figures/figure_01_image_synthesis/assets/tensorflow_inception_graph.pb
 # paths, cluster details, or other release-only bookkeeping.
 _private/
 **/_private/
+
+# New revision pilot runtime files
+logs/
+.pytest_cache/

@@ -1,0 +1,9 @@
+{
+  "subjects": ["sub001", "sub002", "sub003", "sub004", "sub005", "sub007", "sub008", "sub009", "sub010", "sub011", "sub012", "sub013", "sub014", "sub015", "sub016", "sub017", "sub019", "sub020", "sub021", "sub022", "sub023", "sub024", "sub025", "sub027", "sub028", "sub029", "sub030", "sub031", "sub032", "sub033"],
+  "cope": "/gpfs/milgram/project/turk-browne/projects/localize_paper/subjects/{subject}/preprocess/allruns.gfeat/cope{image}.feat/stats/cope1.nii.gz",
+  "mask": "/gpfs/milgram/project/turk-browne/projects/localize_paper/subjects/{subject}/preprocess/allruns.gfeat/mask.nii.gz",
+  "model_rsms": "/gpfs/milgram/project/turk-browne/projects/localize_paper/data/inception/features.npy",
+  "legacy_result": "/gpfs/milgram/project/turk-browne/projects/localize/analysis/subjects/{subject}/searchlight/rad{radius}/{subject}_layer{layer}-cor.nii.gz",
+  "radius": 3,
+  "image_order_status": "Preserves original pipeline cope1..16 and model index0..15. Full A-P stimulus provenance still requires review."
+}
