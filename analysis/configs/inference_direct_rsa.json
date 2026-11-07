@@ -1,0 +1,21 @@
+{
+  "n_sign_flips": 10000,
+  "sign_flip_seed": 20261108,
+  "sign_flip_batch_size": 16,
+  "alternative": "two-sided",
+  "alpha": 0.05,
+  "family": "all 12 layers and all fixed 30-subject common-coverage voxels together",
+  "statistic": "one-sample t of subject Fisher z",
+  "null": "population mean Fisher-transformed direct model-brain correlation equals zero for the fixed 16 images",
+  "randomization": "one independent +/-1 sign per subject, shared across all layers and voxels in that draw",
+  "assumptions": "independent participants and joint subject error vectors symmetric about zero under the null",
+  "generalization": "participants conditional on these images; no inference to a population of new image sets",
+  "n_subject_bootstraps": 1000,
+  "subject_bootstrap_seed": 20261109,
+  "bootstrap_intervals": "pointwise percentile 95% intervals for spatial correlations, conditional on images",
+  "sources": [
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC4010955/",
+    "https://fsl.fmrib.ox.ac.uk/fsl/docs/statistics/randomise.html",
+    "https://elifesciences.org/articles/82566"
+  ]
+}
