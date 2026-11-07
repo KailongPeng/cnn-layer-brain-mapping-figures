@@ -106,22 +106,19 @@ def noise_ceiling_plot(root,roi_dir=None,output_dir=None):
     source=root/'noise_ceiling';output=Path(output_dir) if output_dir else source/'plots'
     if output.exists():raise FileExistsError(str(output))
     if not json.loads((source/'independent_qc.json').read_text())['passed']:raise ValueError('Noise ceiling QC not passed')
-    rois=Path(roi_dir) if roi_dir else root/'roi'
+    rois=Path(roi_dir) if roi_dir else root/'roi_corrected'
     models=list(csv.DictReader((rois/'group_roi_r.csv').open()))
-    if roi_dir:
-        mask=nib.load(str(root/'group/common_all30_mask.nii.gz')).get_fdata()>0
-        atlas=nib.load(str(rois/'wang_atlas_mni2mm.nii.gz')).get_fdata()[mask]
-        definitions=json.loads((rois/'qc.json').read_text())['definitions']
-        lower=np.load(str(source/'per_subject_lower_r.npy'),mmap_mode='r')
-        upper=np.load(str(source/'per_subject_upper_r.npy'),mmap_mode='r')
-        ceiling=[]
-        for definition in definitions:
-            selected=np.isin(atlas,definition['label_ids'])
-            ceiling.append({'roi':definition['roi'],'common_voxels':int(selected.sum()),
-                            'lower_mean_r':float(lower[:,selected].mean(dtype=np.float64)),
-                            'upper_mean_r':float(upper[:,selected].mean(dtype=np.float64))})
-    else:
-        ceiling=list(csv.DictReader((source/'roi_noise_ceiling.csv').open()))
+    mask=nib.load(str(root/'group/common_all30_mask.nii.gz')).get_fdata()>0
+    atlas=nib.load(str(rois/'wang_atlas_mni2mm.nii.gz')).get_fdata()[mask]
+    definitions=json.loads((rois/'qc.json').read_text())['definitions']
+    lower=np.load(str(source/'per_subject_lower_r.npy'),mmap_mode='r')
+    upper=np.load(str(source/'per_subject_upper_r.npy'),mmap_mode='r')
+    ceiling=[]
+    for definition in definitions:
+        selected=np.isin(atlas,definition['label_ids'])
+        ceiling.append({'roi':definition['roi'],'common_voxels':int(selected.sum()),
+                        'lower_mean_r':float(lower[:,selected].mean(dtype=np.float64)),
+                        'upper_mean_r':float(upper[:,selected].mean(dtype=np.float64))})
     fig,axes=plt.subplots(4,4,figsize=(15,11),constrained_layout=True)
     for index,row in enumerate(ceiling):
         values=sorted([r for r in models if r['roi']==row['roi']],key=lambda r:int(r['layer']))
@@ -135,9 +132,8 @@ def noise_ceiling_plot(root,roi_dir=None,output_dir=None):
     fig.suptitle('Current 16-image synthesized data: model r and brain-RSM reliability\n'
                  'Identical full-Cube inputs and common coverage; gray band is not a confidence interval')
     output.mkdir(parents=True,exist_ok=False)
-    if roi_dir:
-        with (output/'roi_noise_ceiling.csv').open('w',newline='') as f:
-            writer=csv.DictWriter(f,fieldnames=['roi','common_voxels','lower_mean_r','upper_mean_r']);writer.writeheader();writer.writerows(ceiling)
+    with (output/'roi_noise_ceiling.csv').open('w',newline='') as f:
+        writer=csv.DictWriter(f,fieldnames=['roi','common_voxels','lower_mean_r','upper_mean_r']);writer.writeheader();writer.writerows(ceiling)
     save(fig,output/'roi_model_r_and_noise_ceiling')
     (output/'qc.json').write_text(json.dumps({'generated':True,'visually_reviewed':False,'roi_source':str(rois),'change':'show layer ticks on every panel; use corrected ROI definitions when provided; reuse full noise-ceiling arrays'},indent=2))
 

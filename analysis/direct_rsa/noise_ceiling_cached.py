@@ -48,9 +48,9 @@ def main():
     for name,values in [('lower',lower),('upper',upper)]:
         data=np.full(mask.shape,np.nan,dtype=np.float32);data[mask]=values.mean(axis=0,dtype=np.float64)
         nib.save(nib.Nifti1Image(data,mask_img.affine),str(output/(name+'_mean_r.nii.gz')))
-    atlas=nib.load(str(root/'roi/wang_atlas_historical_conversion.nii.gz')).get_fdata()
-    definitions=json.loads((root/'roi/qc.json').read_text())['definitions']
-    model_rows=list(csv.DictReader((root/'roi/group_roi_r.csv').open()))
+    atlas=nib.load(str(root/'roi_corrected/wang_atlas_mni2mm.nii.gz')).get_fdata()
+    definitions=json.loads((root/'roi_corrected/qc.json').read_text())['definitions']
+    model_rows=list(csv.DictReader((root/'roi_corrected/group_roi_r.csv').open()))
     roi_rows=[]
     fig,axes=plt.subplots(4,4,figsize=(15,11),sharex=True,constrained_layout=True)
     for index,definition in enumerate(definitions):
@@ -60,7 +60,7 @@ def main():
         values=np.asarray([float(row['mean_subject_roi_r']) for row in rows])
         ax=axes.flat[index];ax.axhspan(lo,hi,color='gray',alpha=.22,label='LOSO-to-inclusive RSM reliability')
         ax.plot(range(1,13),values,marker='o',markersize=3,color='#126ba0')
-        ax.axhline(0,color='black',linewidth=.6);ax.set_title(definition['roi']);ax.set_xticks([1,4,8,12])
+        ax.axhline(0,color='black',linewidth=.6);ax.set_title(definition['roi']);ax.set_xticks([1,4,8,12]);ax.tick_params(axis='x',labelbottom=True)
         ax.set_xlabel('Layer');ax.set_ylabel('Mean raw Pearson r')
         roi_rows.append({'roi':definition['roi'],'common_voxels':int(selected.sum()),'lower_mean_r':lo,'upper_mean_r':hi})
     for index in range(len(definitions),16):axes.flat[index].set_visible(False)
@@ -73,6 +73,7 @@ def main():
     report={'passed':True,'n_subjects':30,'centers':len(coords),'visually_reviewed':False,
             'method':'lower: corr(subject brain RSM, mean other-subject RSM); upper: corr(subject RSM, inclusive mean RSM)',
             'aggregation':'arithmetic mean raw r across subjects, then across ROI voxels; matches ROI model-r averaging',
+            'roi_source':'roi_corrected with MATLAB one-based origin corrected',
             'input':'exact float64 full-Cube brain RSM cache used for direct r; no removal of constant-across-image voxel columns',
             'interpretation':'finite-sample lower/upper estimates of RSM reliability; band is not an inferential confidence interval',
             'historical_difference':'old noise-ceiling worker removed voxel columns with zero across-image variance; do not assume identical old/new estimands'}

@@ -17,4 +17,4 @@ OUTPUT="$PROJECT/derivatives/direct_rsa_revision_20261107"
 "$CONDA_PREFIX/bin/python3" -m analysis.direct_rsa.preview --group-dir "$OUTPUT/group" --output-dir "$OUTPUT/previews"
 "$CONDA_PREFIX/bin/python3" -m analysis.direct_rsa.roi_summary \
   --config analysis/configs/milgram_direct_rsa.json --input-dir "$OUTPUT/full" \
-  --group-dir "$OUTPUT/group" --atlas-mat "$PROJECT/rebuttal/analyses/vtpm.mat" --output-dir "$OUTPUT/roi"
+  --group-dir "$OUTPUT/group" --atlas-mat "$PROJECT/rebuttal/analyses/vtpm.mat" --output-dir "$OUTPUT/roi_corrected"
