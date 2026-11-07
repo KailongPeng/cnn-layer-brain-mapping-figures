@@ -1,6 +1,6 @@
 """Descriptive bilateral Wang ROI summaries using the existing paper atlas source.
 
-Uses the historical atlas conversion affine and nearest-neighbor resampling,
+Converts MATLAB one-based indices to NiBabel zero-based indices before resampling,
 records the actual label names, and retains individual-subject ROI values.
 """
 import argparse
@@ -13,6 +13,7 @@ import nibabel as nib
 from nibabel.processing import resample_from_to
 import numpy as np
 from scipy.io import loadmat
+from .atlas import fieldtrip_to_nibabel_affine
 
 
 ROI_NAMES = {'V1':['v1v','v1d'], 'V2':['v2v','v2d'], 'V3':['v3v','v3d'],
@@ -37,7 +38,8 @@ def main():
     common=reference.get_fdata()>0
     mat=loadmat(args.atlas_mat,squeeze_me=True,struct_as_record=False)['vtpm']
     labels=[str(x).strip() for x in mat.tissuelabel.tolist()]
-    atlas_source=nib.Nifti1Image(mat.tissue.astype(np.int16),mat.transform)
+    converted_affine=fieldtrip_to_nibabel_affine(mat.transform)
+    atlas_source=nib.Nifti1Image(mat.tissue.astype(np.int16),converted_affine)
     atlas=resample_from_to(atlas_source,(reference.shape,reference.affine),order=0)
     tissue=atlas.get_fdata().astype(np.int16)
     masks=[];definitions=[]
@@ -70,7 +72,7 @@ def main():
     bootstrap=subject_values[draws].mean(axis=1)
     lo,hi=np.quantile(bootstrap,[.025,.975],axis=0)
     output.mkdir(parents=True,exist_ok=False)
-    nib.save(atlas,str(output/'wang_atlas_historical_conversion.nii.gz'))
+    nib.save(atlas,str(output/'wang_atlas_mni2mm.nii.gz'))
     with (output/'subject_roi_r.csv').open('w',newline='') as f:
         writer=csv.writer(f);writer.writerow(['subject','layer','roi','mean_voxel_r'])
         for index,subject in enumerate(cfg['subjects']):
@@ -83,7 +85,9 @@ def main():
                 writer.writerow([layer+1,name,subject_values[:,layer,roi].mean(),lo[layer,roi],hi[layer,roi],group_values[layer,roi]])
     report={'descriptive_only':True,'definitions':definitions,'atlas_mat':args.atlas_mat,
             'atlas_mat_sha256':hashlib.sha256(Path(args.atlas_mat).read_bytes()).hexdigest(),
-            'conversion':'historical paper method: vtpm tissue with stored transform, nearest-neighbor to current group grid',
+            'conversion':'FieldTrip one-based transform @ translation(+1,+1,+1) for NiBabel zero-based voxel indices; nearest-neighbor resampling',
+            'source_affine':np.asarray(mat.transform).tolist(),'nibabel_affine':converted_affine.tolist(),
+            'coordinate_source':'https://www.fieldtriptoolbox.org/faq/homogenous/',
             'roi_statistic':'within-ROI arithmetic mean of signed r per subject; arithmetic mean across subjects',
             'additional_statistic':'spatial ROI mean of group Fisher-aggregated map; separate CSV column',
             'uncertainty':'1000 subject bootstrap resamples; pointwise percentile intervals; no multiplicity correction',
