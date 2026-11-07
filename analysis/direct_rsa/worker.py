@@ -11,7 +11,7 @@ import numpy as np
 from mpi4py import MPI
 from brainiak.searchlight.searchlight import Cube, Searchlight
 
-from .core import direct_pearson
+from .core import direct_pearson, validate_indices
 
 
 def score_searchlight(data, mask, radius, broadcast):
@@ -31,16 +31,30 @@ def main():
     p.add_argument('--indices',type=int,nargs='+')
     args=p.parse_args()
     comm=MPI.COMM_WORLD; rank=comm.rank
-    cfg=json.loads(Path(args.config).read_text())
+    config_path=Path(args.config)
+    cfg=json.loads(config_path.read_text())
+    indices=validate_indices(list(range(16)) if args.indices is None else args.indices,16).tolist()
     out=Path(args.output_dir)
     data=mask=features=affine=None
     reference=None; error=None
+    input_records=[]; model_digest=None
     if rank==0:
         try:
             if args.subject not in cfg['subjects']:
                 raise ValueError('Unexpected subject')
             if out.exists():
                 raise FileExistsError('Preserve existing output directory: '+str(out))
+            paths=[Path(cfg['mask'].format(subject=args.subject))]
+            paths += [Path(cfg['cope'].format(subject=args.subject,image=i)) for i in range(1,17)]
+            for path in paths:
+                stat=path.stat()
+                input_records.append({'path':str(path),'size':stat.st_size,'mtime_ns':stat.st_mtime_ns})
+            model_digest=hashlib.sha256(Path(cfg['model_rsms']).read_bytes()).hexdigest()
+            if not args.reference:
+                provenance_path=Path(cfg['stimulus_identity_report'])
+                provenance=json.loads(provenance_path.read_text())
+                if not provenance['passed'] or provenance['features_sha256']!=model_digest:
+                    raise ValueError('Stimulus identity gate has not passed for this model')
             image=nib.load(cfg['mask'].format(subject=args.subject))
             mask=image.get_fdata()>0; affine=image.affine
             arrays=[]
@@ -51,7 +65,7 @@ def main():
                 arrays.append(img.get_fdata())
             data=np.stack(arrays,axis=-1)
             features=np.load(cfg['model_rsms'],allow_pickle=False)
-            if features.shape!=(12,16,16):
+            if features.shape!=(12,16,16) or not np.isfinite(features).all():
                 raise ValueError('Unexpected features')
             radius=int(cfg['radius'])
             for axis in range(3):
@@ -86,7 +100,11 @@ def main():
     metadata={'subject':args.subject,'mpi_ranks':comm.size,'seconds':time.monotonic()-start,
               'requested_centers':int(mask.sum()),'radius':cfg['radius'],'shape':'Cube',
               'code_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
-              'image_order_status':cfg['image_order_status']}
+              'image_order_status':cfg['image_order_status'],
+              'image_indices':indices,'model_sha256':model_digest,
+              'config_sha256':hashlib.sha256(config_path.read_bytes()).hexdigest(),
+              'inputs':input_records,'voxel_policy':'all voxels in full 7x7x7 Cube; mask selects centers only',
+              'boundary_policy':'remove centers within radius of array edge'}
     if reference is not None:
         actual=[]; expected=[]
         for point in reference['points']:
