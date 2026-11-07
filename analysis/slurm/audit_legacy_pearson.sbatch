@@ -12,4 +12,4 @@ cd "${SLURM_SUBMIT_DIR}"
 OUTPUT=/gpfs/milgram/project/turk-browne/projects/localize_paper/derivatives/direct_rsa_revision_20261107
 "$PYTHON" -m analysis.direct_rsa.audit_legacy \
   --config analysis/configs/milgram_direct_rsa.json \
-  --pilot-dir "$OUTPUT/pilot" --output "$OUTPUT/legacy_rad3_audit.json"
+  --pilot-dir "$OUTPUT/pilot" --output "$OUTPUT/legacy_rad3_audit_v2.json"
