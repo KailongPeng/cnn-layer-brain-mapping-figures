@@ -44,14 +44,35 @@ def main():
         raise ValueError('Expected 12 historical layers, got %r' % layers)
     tensors = [graph.get_tensor_by_name('import/%s/conv:0' % name) for name in layers]
     vectors = [[] for _ in layers]
+    shapes = []
     config = tf.ConfigProto(device_count={'GPU': 0}, intra_op_parallelism_threads=4,
                             inter_op_parallelism_threads=1)
     with tf.Session(graph=graph, config=config) as session:
         for i, image in enumerate(images):
             activations = session.run(tensors, feed_dict={image_input: image})
+            if i == 0:
+                shapes = [activation.shape for activation in activations]
             for collection, activation in zip(vectors, activations):
-                collection.append(activation.reshape(-1).astype(np.float64))
+                collection.append(activation.reshape(-1))
             print('image %d/16 complete' % (i + 1), flush=True)
+        # Reproduce historical TFCorr arithmetic separately. Its float32
+        # subtractive formula can lose precision for high-mean activations.
+        with graph.as_default():
+            first = tf.placeholder(tf.float32, shape=[None, None, None, None])
+            second = tf.placeholder(tf.float32, shape=[None, None, None, None])
+            dim = tf.cast(tf.size(first), tf.float32)
+            numerator = dim*tf.reduce_sum(first*second)-tf.reduce_sum(first)*tf.reduce_sum(second)
+            denominator = tf.sqrt((dim*tf.reduce_sum(tf.square(first))-tf.square(tf.reduce_sum(first)))*
+                                  (dim*tf.reduce_sum(tf.square(second))-tf.square(tf.reduce_sum(second))))
+            legacy_corr = numerator/denominator
+        legacy = np.zeros((12,16,16), dtype=np.float64)
+        for layer, collection in enumerate(vectors):
+            for i in range(16):
+                for j in range(i+1,16):
+                    value = session.run(legacy_corr, feed_dict={first: collection[i].reshape(shapes[layer]),
+                                                                second: collection[j].reshape(shapes[layer])})
+                    legacy[layer,i,j] = legacy[layer,j,i] = value
+            print('legacy arithmetic layer %d/12 complete' % (layer+1), flush=True)
     actual = np.asarray([np.corrcoef(layer) for layer in vectors])
     expected = np.load(str(features_path), allow_pickle=False)
     if expected.shape != actual.shape or not np.isfinite(actual).all():
@@ -62,7 +83,8 @@ def main():
     errors = np.max(np.abs(a-b), axis=1)
     # The historical graph computed Pearson in float32; the independent
     # activation comparison uses float64, so exact byte equality is not expected.
-    passed = bool(np.allclose(a, b, atol=1e-4, rtol=1e-4))
+    legacy_upper = legacy[:,tri[0],tri[1]]
+    passed = bool(np.allclose(legacy_upper, b, atol=1e-4, rtol=1e-4))
     report = {'passed': passed, 'tolerance_atol': 1e-4, 'tolerance_rtol': 1e-4,
               'tensorflow': tf.__version__, 'layers': layers,
               'image_shapes': [list(x.shape) for x in images],
@@ -70,6 +92,8 @@ def main():
               'images': [{'index': i, 'condition': chr(65+i), 'filename': path.name,
                           'sha256': digest(path)} for i, path in enumerate(paths)],
               'max_absolute_error_per_layer': errors.tolist(),
+              'legacy_float32_max_absolute_error_per_layer': np.max(np.abs(legacy_upper-b),axis=1).tolist(),
+              'pass_criterion': 'historical float32 TFCorr formula versus saved model RSM',
               'comparison': 'strict upper triangle; diagonal excluded',
               'method': 'RGB PNG; subtract 117; full pre-ReLU convolution activation Pearson'}
     output.parent.mkdir(parents=True, exist_ok=True)
