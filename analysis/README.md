@@ -17,6 +17,8 @@ Milgram历史目录 `projects/localize/analysis/subjects/{sub}/searchlight/` 实
 - `configs/milgram_direct_rsa.json`：当前输入、旧结果路径及图片顺序核查状态。
 - `slurm/direct_rsa_pilot.sbatch`：前三名被试各64位置的受控pilot。
 - `direct_rsa/tests/`：数学定义、符号、图片子集、无定义值与互补分半的验证。
+- `direct_rsa/audit_legacy.py`：检查旧rad3结果文件和header，并与pilot固定位置比较，显式报告超范围值及_noNAN候选。
+- [STATUS_20261107.md](STATUS_20261107.md)：真实Slurm运行状态、旧结果复用判断及剩余事项。
 
 ## 运行
 
