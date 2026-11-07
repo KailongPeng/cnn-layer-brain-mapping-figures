@@ -32,7 +32,7 @@ def main():
     z_indices=[int(round(nib.affines.apply_affine(np.linalg.inv(affine),[0,0,z])[2])) for z in slices]
     extent=[affine[0,3]-affine[0,0]/2,affine[0,3]+affine[0,0]*(mask.shape[0]-.5),
             affine[1,3]-affine[1,1]/2,affine[1,3]+affine[1,1]*(mask.shape[1]-.5)]
-    fig,axes=plt.subplots(12,3,figsize=(11,27),layout='constrained')
+    fig,axes=plt.subplots(12,3,figsize=(11,27),constrained_layout=True)
     for layer,data in enumerate(maps):
         for column,k in enumerate(z_indices):
             ax=axes[layer,column]
@@ -50,7 +50,7 @@ def main():
     fig.savefig(str(output/'group_r_axial_preview.pdf'))
     plt.close(fig)
     spatial=np.loadtxt(str(source/'spatial_correlation_common_all30.csv'),delimiter=',')
-    fig,ax=plt.subplots(figsize=(7,6),layout='constrained')
+    fig,ax=plt.subplots(figsize=(7,6),constrained_layout=True)
     im=ax.imshow(spatial,vmin=-1,vmax=1,cmap='RdBu_r')
     ax.set_xticks(range(12));ax.set_yticks(range(12))
     ax.set_xticklabels(range(1,13));ax.set_yticklabels(range(1,13))
@@ -67,3 +67,4 @@ def main():
 
 if __name__=='__main__':
     main()
+
