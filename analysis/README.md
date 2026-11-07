@@ -32,10 +32,24 @@ sbatch analysis/slurm/direct_rsa_pilot.sbatch
 
 Slurm入口使用明确的analysis环境Python，并记录输入文件路径、修改时间、模型hash、配置hash和代码commit。输出写入项目的新derivatives目录；已存在的同名pilot结果会报错，不覆盖。
 
-尚未提供或运行正式全脑分析与群体显著性推断。本轮先验证旧结果能否复用和当前输入的计算链，再决定全脑任务。图片对在统计上并非独立样本，不能把120条RSM上三角当作独立样本做普通相关p值检验。
+30人全脑与描述性组图已完成并通过全量数值QC；群体显著性推断尚未完成。最新输出与作业证据见[结果记录](RESULTS_DIRECT_PEARSON_20261108.md)。图片对在统计上并非独立样本，不能把120条RSM上三角当作独立样本做普通相关p值检验。
 
 旧代码在无效位置将NaN写成0，新核心保留NaN。searchlight沿用原代码的完整cube模式，不擅自换成球形、筛掉cube内体素或按新mask重定义模式。
 
 ## 执行规划
 
 见[PLAN_DIRECT_PEARSON.md](PLAN_DIRECT_PEARSON.md)：BrainIAK Searchlight + MPI调用已验证Pearson核心，先单被试全脑验证，再扩展全部被试；包含0927备份路径分工与完成标准。
+
+## 正式直接r入口与已运行作业
+
+- `direct_rsa/verify_stimulus_model.py`：从实验PNG独立复算模型，读取包含bias的命名pre-ReLU张量。
+- `direct_rsa/audit_stimulus_identity.py`：任务、230份run设计、PNG和模型的对应审计。
+- `direct_rsa/worker.py`：BrainIAK Searchlight + MPI，完整7×7×7 Cube，保存12层有符号r和输入来源。
+- `slurm/direct_rsa_full_array.sbatch`：30人array入口；已运行29530911。
+- `direct_rsa/group.py`及`slurm/direct_rsa_group.sbatch`：被试层面Fisher汇总；已运行29530912。
+- `direct_rsa/qc_cohort.py`：独立读取全部360张图并逐体素复算组图。
+- `direct_rsa/preview.py`、`roi_summary.py`：未阈值化预览和双侧Wang ROI摘要；连同QC作业29530973已完成。
+
+上述输出目录已存在；入口拒绝覆盖。不要为复现而直接重投同名目录。新的检验或复现应先指定新输出目录、记录版本并说明目的。
+
+汇总测试：`python -m unittest analysis.direct_rsa.test_group analysis.direct_rsa.tests.test_core`，Milgram analysis环境8项通过。本机默认Python缺NumPy，未作为通过依据。
